@@ -1,448 +1,361 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Music Search</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    body{font-family:'Noto Sans KR',sans-serif;background-color:#F3E8FF}
-    .card{background:#fff;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)}
-    /* 검색결과 스크롤바 */
-    #searchResults::-webkit-scrollbar{width:8px}
-    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family:'Noto Sans KR',sans-serif; background-color:#F3E8FF; }
+        .card { background:#fff; border-radius:20px; box-shadow:0 10px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
 
-    /* Player layouts */
-    .player.layout-horizontal{flex-direction:row;align-items:center;width:100%}
-    .player.layout-horizontal .album-art{width:5rem;height:5rem}
-    .player.layout-horizontal .info-section{margin-left:1rem;text-align:left}
-    .player.layout-horizontal .info-section .flex{justify-content:flex-start}
-    .player.layout-horizontal .controls-section{flex-direction:row;align-items:center}
+        /* search scrollbar */
+        #searchResults::-webkit-scrollbar { width:8px; }
+        #searchResults::-webkit-scrollbar-track { background:#f1f1f1; border-radius:10px; }
+        #searchResults::-webkit-scrollbar-thumb { background:#C4B5FD; border-radius:10px; }
+        #searchResults::-webkit-scrollbar-thumb:hover { background:#A78BFA; }
 
-    .player.layout-vertical{flex-direction:column;align-items:center;width:288px}
-    .player.layout-vertical .album-art{width:10rem;height:10rem}
-    .player.layout-vertical .info-section{margin-left:0;margin-top:1rem;text-align:center;width:100%;padding:0 1rem}
-    .player.layout-vertical .info-section .flex{justify-content:center}
-    .player.layout-vertical .controls-section{flex-direction:column;margin-top:1rem;gap:.5rem}
-    .player.layout-vertical .controls-section canvas{margin-left:0}
-  </style>
+        /* layouts */
+        .player.layout-horizontal { flex-direction:row; align-items:center; width:100%; }
+        .player.layout-horizontal .album-art { width:5rem; height:5rem; }
+        .player.layout-horizontal .info-section { margin-left:1rem; text-align:left; }
+        .player.layout-horizontal .info-section .flex { justify-content:flex-start; }
+        .player.layout-horizontal .controls-section { flex-direction:row; align-items:center; }
+
+        .player.layout-vertical { flex-direction:column; align-items:center; width:288px; }
+        .player.layout-vertical .album-art { width:10rem; height:10rem; }
+        .player.layout-vertical .info-section { margin-left:0; margin-top:1rem; text-align:center; width:100%; padding:0 1rem; }
+        .player.layout-vertical .info-section .flex { justify-content:center; }
+        .player.layout-vertical .controls-section { flex-direction:column; margin-top:1rem; gap:.5rem; }
+        .player.layout-vertical .controls-section canvas { margin-left:0; }
+
+        /* settings floating panel */
+        #settingsPanel { opacity:0; transform:scale(.95) translateY(10px); transition:opacity .2s, transform .2s; pointer-events:none; }
+        #settingsPanel.open { opacity:1; transform:scale(1) translateY(0); pointer-events:auto; }
+    </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
-  <div class="w-full max-w-3xl mx-auto p-4">
-    <!-- 헤더: 타이틀 + 설정 아이콘 -->
-    <header class="mb-4">
-      <div class="flex items-center justify-between">
-        <h1 id="mainTitle" class="text-2xl font-bold text-purple-800">Music search</h1>
-        <button id="settingsIcon"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 text-white shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                aria-label="설정 열기/닫기">
-          <!-- gear icon -->
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.89 3.31.877 2.42 2.42a1.724 1.724 0 001.065 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.065 2.573c.89 1.543-.877 3.31-2.42 2.42a1.724 1.724 0 00-2.573 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.065c-1.543.89-3.31-.877-2.42-2.42a1.724 1.724 0 00-1.065-2.573c-1.756-.426-1.756-2.924 0-3.35.59-.143 1.05-.603 1.193-1.193.89-1.543 2.857-3.41 4.4-2.52.44.254 1.006.254 1.446 0z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
+    <div class="w-full max-w-3xl mx-auto p-4">
+
+        <!-- Player top -->
+        <div class="mb-8 flex justify-center">
+            <div id="player" class="player flex p-4 rounded-2xl shadow-lg text-white transition-all duration-500 ease-in-out transform layout-horizontal">
+                <img id="albumArt" src="https://placehold.co/80x80/6d28d9/ffffff?text=Album" alt="Album Art" class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
+                <div class="flex-grow min-w-0 info-section">
+                    <h2 id="trackTitleWrapper" class="font-bold text-lg flex min-w-0 items-baseline">
+                        <span id="trackTitle" class="truncate">노래 제목</span>
+                        <span id="trackArtist" class="ml-2 flex-shrink-0"></span>
+                    </h2>
+                    <div class="flex items-center text-sm opacity-80">
+                        <span class="mr-2">SING 🎤</span>
+                        <p id="artistName">채널명</p>
+                    </div>
+                </div>
+                <div class="controls-section flex items-center">
+                    <div class="flex items-center space-x-2 text-2xl">
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+                    </div>
+                    <canvas id="waveformCanvas" width="120" height="40" class="ml-4"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <header class="text-center mb-6">
+            <h1 id="mainTitle" class="text-2xl font-bold text-purple-800">Music search</h1>
+        </header>
+
+        <main>
+            <div class="flex items-center space-x-2 mb-6 card p-4">
+                <input type="text" id="searchInput" placeholder="아티스트나 곡명을 검색하세요..." class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+                <button id="searchButton" class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform transform active:scale-95">검색</button>
+            </div>
+            <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
+            <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+        </main>
+    </div>
+
+    <!-- Settings floating -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
-      </div>
-    </header>
 
-    <!-- 플레이어: 최상단 배치 -->
-    <section class="mb-6 flex justify-center">
-      <div id="player" class="player flex p-4 rounded-2xl shadow-lg text-white transition-all duration-500 ease-in-out transform layout-horizontal"
-           style="background:linear-gradient(90deg,#A855F7,#7C3AED)">
-        <img id="albumArt" src="https://placehold.co/80x80/6d28d9/ffffff?text=Album" alt="Album Art"
-             class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
-        <div class="flex-grow min-w-0 info-section">
-          <h2 id="trackTitleWrapper" class="font-bold text-lg flex min-w-0 items-baseline">
-            <span id="trackTitle" class="truncate">노래 제목</span>
-            <span id="trackArtist" class="ml-2 flex-shrink-0"></span>
-          </h2>
-          <div class="flex items-center text-sm opacity-80">
-            <span class="mr-2">SING 🎤</span>
-            <p id="artistName">채널명</p>
-          </div>
+        <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
+            <div>
+                <label for="displayNameInput" class="block text-sm font-medium text-gray-700">표시 채널명</label>
+                <div class="mt-1 flex space-x-2">
+                    <input type="text" id="displayNameInput" placeholder="채널명을 입력하세요" class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+                    <button id="applyDisplayName" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
+                <div class="mt-2 flex space-x-2">
+                    <label class="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                        <span>이미지 업로드</span>
+                        <input type="file" id="imageUpload" class="hidden" accept="image/*">
+                    </label>
+                    <button id="revertCover" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">카드 색상</label>
+                <div class="mt-2 flex items-center space-x-2">
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs text-gray-500 mb-1">기본 색상</span>
+                        <input type="color" id="primaryColor" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-xs text-gray-500 mb-1">보조 색상</span>
+                        <input type="color" id="secondaryColor" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+                    </div>
+                    <button id="applyColors" class="self-end px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">색상 적용</button>
+                    <button id="resetColors" class="self-end px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본 색상</button>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
+                <div class="mt-2 flex space-x-2">
+                    <button id="layoutHorizontalBtn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors">가로형</button>
+                    <button id="layoutVerticalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">세로형</button>
+                </div>
+            </div>
         </div>
-        <div class="controls-section flex items-center">
-          <div class="flex items-center space-x-2 text-2xl">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
-          </div>
-          <canvas id="waveformCanvas" width="120" height="40" class="ml-4"></canvas>
-        </div>
-      </div>
-    </section>
+    </div>
 
-    <!-- 설정 카드: 아이콘으로 토글, 처음엔 숨김 -->
-    <section id="settingsCard" class="card mb-6 p-6 space-y-6 hidden">
-      <div>
-        <label for="displayNameInput" class="block text-sm font-medium text-gray-700">표시 채널명</label>
-        <div class="mt-1 flex space-x-2">
-          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
-                 class="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-          <button id="applyDisplayName" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
-        </div>
-      </div>
-      <div>
-        <label for="imageUpload" class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
-        <div class="mt-2 flex space-x-2">
-          <label class="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
-            <span>이미지 업로드</span>
-            <input id="imageUpload" type="file" class="hidden" accept="image/*">
-          </label>
-          <button id="revertCover" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">카드 색상</label>
-        <div class="mt-2 flex items-center space-x-2">
-          <div class="flex flex-col items-center">
-            <span class="text-xs text-gray-500 mb-1">기본 색상</span>
-            <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          </div>
-          <div class="flex flex-col items-center">
-            <span class="text-xs text-gray-500 mb-1">보조 색상</span>
-            <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          </div>
-          <button id="applyColors" class="self-end px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">색상 적용</button>
-          <button id="resetColors" class="self-end px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본 색상</button>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
-        <div class="mt-2 flex space-x-2">
-          <button id="layoutHorizontalBtn" class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors">가로형</button>
-          <button id="layoutVerticalBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">세로형</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- 검색 카드 -->
-    <main class="card p-6">
-      <div class="flex flex-row items-center w-full">
-        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
-               class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
-        <button id="searchButton"
-                class="bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform transform active:scale-95">
-          검색
-        </button>
-      </div>
-      <div id="status" class="text-center text-gray-500 mt-4 h-6"></div>
-
-      <!-- 결과 리스트: 없을 땐 hidden 으로 완전히 접음 -->
-      <div id="resultsWrap" class="mt-4 hidden">
-        <div id="searchResults" class="max-h-64 overflow-y-auto space-y-2"></div>
-      </div>
-    </main>
-  </div>
-
-  <script>
+    <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // --- CONFIG ---
-      const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
-      const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
+        // --- CONFIG ---
+        const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
+        const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
 
-      // DOM refs
-      const settingsIcon = document.getElementById('settingsIcon');
-      const settingsCard = document.getElementById('settingsCard');
+        // DOM refs
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const searchResultsContainer = document.getElementById('searchResults');
+        const statusDiv = document.getElementById('status');
 
-      const searchInput = document.getElementById('searchInput');
-      const searchButton = document.getElementById('searchButton');
-      const statusDiv = document.getElementById('status');
-      const resultsWrap = document.getElementById('resultsWrap');
-      const searchResultsContainer = document.getElementById('searchResults');
+        const playerDiv = document.getElementById('player');
+        const albumArtImg = document.getElementById('albumArt');
+        const trackTitleSpan = document.getElementById('trackTitle');
+        const trackArtistSpan = document.getElementById('trackArtist');
+        const artistNameP = document.getElementById('artistName');
 
-      const playerDiv = document.getElementById('player');
-      const albumArtImg = document.getElementById('albumArt');
-      const trackTitleSpan = document.getElementById('trackTitle');
-      const trackArtistSpan = document.getElementById('trackArtist');
-      const artistNameP = document.getElementById('artistName');
+        const settingsIconBtn = document.getElementById('settingsIconBtn');
+        const settingsPanel   = document.getElementById('settingsPanel');
+        const displayNameInput = document.getElementById('displayNameInput');
+        const applyDisplayName = document.getElementById('applyDisplayName');
+        const imageUpload = document.getElementById('imageUpload');
+        const revertCover = document.getElementById('revertCover');
+        const primaryColor = document.getElementById('primaryColor');
+        const secondaryColor = document.getElementById('secondaryColor');
+        const applyColors = document.getElementById('applyColors');
+        const resetColors = document.getElementById('resetColors');
+        const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+        const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+        const waveformCanvas = document.getElementById('waveformCanvas');
 
-      const displayNameInput = document.getElementById('displayNameInput');
-      const applyDisplayName = document.getElementById('applyDisplayName');
-      const imageUpload = document.getElementById('imageUpload');
-      const revertCover = document.getElementById('revertCover');
-      const primaryColor = document.getElementById('primaryColor');
-      const secondaryColor = document.getElementById('secondaryColor');
-      const applyColors = document.getElementById('applyColors');
-      const resetColors = document.getElementById('resetColors');
-      const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
-      const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
-      const waveformCanvas = document.getElementById('waveformCanvas');
+        let accessToken = null;
+        let originalAlbumArtUrl = '';
+        let isCustomCoverActive = false;
 
-      let accessToken = null;
-      let originalAlbumArtUrl = '';
-      let isCustomCoverActive = false;
-
-      // 설정 아이콘 토글
-      settingsIcon.addEventListener('click', () => {
-        settingsCard.classList.toggle('hidden');
-      });
-
-      // 그라디언트
-      function updatePlayerGradient(isReset=false){
-        const color1 = isReset ? '#A855F7' : primaryColor.value;
-        const color2 = isReset ? '#7C3AED' : secondaryColor.value;
-        const direction = playerDiv.classList.contains('layout-vertical') ? '180deg' : '90deg';
-        playerDiv.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
-      }
-
-      applyDisplayName?.addEventListener('click', ()=>{
-        const v = displayNameInput.value.trim();
-        if(v) artistNameP.textContent = v;
-      });
-
-      imageUpload?.addEventListener('change', e=>{
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev)=>{
-          albumArtImg.src = ev.target.result;
-          isCustomCoverActive = true;
-        };
-        reader.readAsDataURL(file);
-      });
-
-      revertCover?.addEventListener('click', ()=>{
-        if(originalAlbumArtUrl) albumArtImg.src = originalAlbumArtUrl;
-        isCustomCoverActive = false;
-      });
-
-      applyColors?.addEventListener('click', updatePlayerGradient);
-      resetColors?.addEventListener('click', ()=>{
-        primaryColor.value = '#A855F7';
-        secondaryColor.value = '#7C3AED';
-        updatePlayerGradient(true);
-      });
-
-      layoutHorizontalBtn?.addEventListener('click', ()=>{
-        playerDiv.classList.remove('layout-vertical');
-        playerDiv.classList.add('layout-horizontal');
-        updatePlayerGradient();
-        layoutHorizontalBtn.classList.add('bg-purple-500','text-white');
-        layoutHorizontalBtn.classList.remove('bg-gray-200','text-gray-700');
-        layoutVerticalBtn.classList.add('bg-gray-200','text-gray-700');
-        layoutVerticalBtn.classList.remove('bg-purple-500','text-white');
-      });
-
-      layoutVerticalBtn?.addEventListener('click', ()=>{
-        playerDiv.classList.remove('layout-horizontal');
-        playerDiv.classList.add('layout-vertical');
-        updatePlayerGradient();
-        layoutVerticalBtn.classList.add('bg-purple-500','text-white');
-        layoutVerticalBtn.classList.remove('bg-gray-200','text-gray-700');
-        layoutHorizontalBtn.classList.add('bg-gray-200','text-gray-700');
-        layoutHorizontalBtn.classList.remove('bg-purple-500','text-white');
-      });
-
-      // 검색결과 보이기/숨기기 헬퍼 (빈 결과이면 스크롤 자체 제거)
-      function setResultsVisible(visible){
-        if(visible){
-          resultsWrap.classList.remove('hidden');
-        }else{
-          resultsWrap.classList.add('hidden');
-          searchResultsContainer.innerHTML = '';
-        }
-      }
-
-      // --- 파형 (부드럽게) ---
-      (function(){
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        const canvas = waveformCanvas;
-        const ctx = canvas.getContext('2d');
-
-        const BAR_COUNT = 18, GAP = 3, SMOOTHING = 0.08;
-        const BASE_SPEED_HZ = 0.6, RIPPLE_SPEED_HZ = 1.2;
-        const BASE_WEIGHT = 0.75, RIPPLE_WEIGHT = 0.25;
-
-        let prevHeights = new Array(BAR_COUNT).fill(0);
-        let targetHeights = new Array(BAR_COUNT).fill(0);
-        let lastW=0,lastH=0;
-
-        function resizeIfNeeded(){
-          const cssW = canvas.clientWidth || 120;
-          const cssH = canvas.clientHeight || 40;
-          if(cssW!==lastW || cssH!==lastH){
-            lastW=cssW; lastH=cssH;
-            canvas.width = Math.floor(cssW*dpr);
-            canvas.height = Math.floor(cssH*dpr);
-            ctx.setTransform(dpr,0,0,dpr,0,0);
-          }
+        // Gradient
+        function updatePlayerGradient(isReset=false){
+            const color1 = isReset ? '#A855F7' : primaryColor.value;
+            const color2 = isReset ? '#7C3AED' : secondaryColor.value;
+            const direction = playerDiv.classList.contains('layout-vertical') ? '180deg' : '90deg';
+            playerDiv.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
         }
 
-        const easeCos = t => 0.5*(1-Math.cos(Math.PI*2*t));
-        let start=null;
-
-        function render(ts){
-          if(!start) start=ts;
-          const t=(ts-start)/1000;
-
-          resizeIfNeeded();
-
-          const W = canvas.clientWidth || 120;
-          const H = canvas.clientHeight || 40;
-          ctx.clearRect(0,0,W,H);
-
-          const barWidth = Math.max(2,(W-(BAR_COUNT-1)*GAP)/BAR_COUNT);
-
-          ctx.shadowBlur=6; ctx.shadowColor='rgba(255,255,255,0.35)';
-          for(let i=0;i<BAR_COUNT;i++){
-            const base = easeCos((t*BASE_SPEED_HZ + i*0.18)%1);
-            const ripple = easeCos((t*RIPPLE_SPEED_HZ + i*0.35)%1);
-            const mix = BASE_WEIGHT*base + RIPPLE_WEIGHT*ripple;
-
-            const MIN=0.25, MAX=0.85;
-            const ratio = MIN + (MAX-MIN)*mix;
-
-            targetHeights[i] = H*ratio;
-            const h = prevHeights[i] + (targetHeights[i]-prevHeights[i])*SMOOTHING;
-            prevHeights[i] = h;
-
-            const x = i*(barWidth+GAP);
-            const y = H-h;
-
-            const r = Math.min(3, barWidth*0.35);
-            roundRect(ctx,x,y,barWidth,h,r);
-            ctx.fillStyle='rgba(255,255,255,0.88)';
-            ctx.fill();
-          }
-          ctx.shadowBlur=0; ctx.shadowColor='transparent';
-          requestAnimationFrame(render);
-        }
-
-        function roundRect(ctx,x,y,w,h,r){
-          const rr=Math.min(r,w*.5,h*.5);
-          ctx.beginPath();
-          ctx.moveTo(x+rr,y);
-          ctx.lineTo(x+w-rr,y);
-          ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
-          ctx.lineTo(x+w,y+h-rr);
-          ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
-          ctx.lineTo(x+rr,y+h);
-          ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
-          ctx.lineTo(x,y+rr);
-          ctx.quadraticCurveTo(x,y,x+rr,y);
-          ctx.closePath();
-        }
-
-        requestAnimationFrame(render);
-        window.addEventListener('resize', resizeIfNeeded);
-      })();
-
-      // --- Spotify API ---
-      const getAccessToken = async () => {
-        if (clientId==='YOUR_SPOTIFY_CLIENT_ID' || clientSecret==='YOUR_SPOTIFY_CLIENT_SECRET'){
-          statusDiv.textContent = "Spotify API 키를 설정해주세요.";
-          return null;
-        }
-        try{
-          const resp = await fetch('https://accounts.spotify.com/api/token',{
-            method:'POST',
-            headers:{
-              'Content-Type':'application/x-www-form-urlencoded',
-              'Authorization':'Basic '+btoa(clientId+':'+clientSecret)
-            },
-            body:'grant_type=client_credentials'
-          });
-          if(!resp.ok) throw new Error('token '+resp.statusText);
-          const data = await resp.json();
-          return data.access_token;
-        }catch(e){
-          console.error(e);
-          statusDiv.textContent="API 토큰 인증 실패";
-          return null;
-        }
-      };
-
-      const searchTracks = async (query)=>{
-        if(!accessToken){
-          statusDiv.textContent="인증 중...";
-          accessToken = await getAccessToken();
-          if(!accessToken) return;
-        }
-        statusDiv.textContent="검색 중...";
-        // 검색 시작할 때 리스트는 우선 숨김
-        setResultsVisible(false);
-
-        try{
-          const resp = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`,{
-            headers:{'Authorization':`Bearer ${accessToken}`}
-          });
-          if(!resp.ok){
-            if(resp.status===401){
-              accessToken = await getAccessToken();
-              if(accessToken) searchTracks(query);
-            }else{
-              throw new Error('search '+resp.statusText);
-            }
-            return;
-          }
-          const data = await resp.json();
-          displayResults(data.tracks.items);
-        }catch(e){
-          console.error(e);
-          statusDiv.textContent="검색 오류가 발생했습니다.";
-        }
-      };
-
-      const displayResults = (tracks)=>{
-        searchResultsContainer.innerHTML = '';
-        if(!tracks || tracks.length===0){
-          statusDiv.textContent='검색 결과가 없습니다.';
-          setResultsVisible(false); // ⬅️ 비었으면 완전히 숨김(스크롤 제거)
-          return;
-        }
-        statusDiv.textContent='';
-        setResultsVisible(true); // ⬅️ 있을 때만 표시/스크롤
-
-        tracks.forEach(track=>{
-          const div=document.createElement('div');
-          div.className='flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition';
-          const albumImage = (track.album.images[2]?.url) || 'https://placehold.co/64x64/f3e8ff/6d28d9?text=?';
-          const artistNames = track.artists.map(a=>a.name).join(', ');
-          div.innerHTML = `
-            <img src="${albumImage}" alt="${track.album.name}" class="w-12 h-12 rounded">
-            <div class="ml-3 min-w-0">
-              <p class="font-semibold text-gray-800 truncate">${track.name}</p>
-              <p class="text-sm text-gray-500 truncate">${artistNames}</p>
-            </div>`;
-          div.addEventListener('click', ()=>updatePlayerUI(track));
-          searchResultsContainer.appendChild(div);
+        // Settings toggle
+        settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+        applyDisplayName.addEventListener('click', ()=>{
+            const v = displayNameInput.value.trim();
+            if(v) artistNameP.textContent = v;
         });
-      };
+        imageUpload.addEventListener('change', e=>{
+            const f = e.target.files[0]; if(!f) return;
+            const r = new FileReader();
+            r.onload = ev => { albumArtImg.src = ev.target.result; isCustomCoverActive = true; };
+            r.readAsDataURL(f);
+        });
+        revertCover.addEventListener('click', ()=>{ if(originalAlbumArtUrl) albumArtImg.src = originalAlbumArtUrl; isCustomCoverActive=false; });
+        applyColors.addEventListener('click', updatePlayerGradient);
+        resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(true); });
 
-      const updatePlayerUI = (track)=>{
-        const imageUrl = (track.album.images[1]?.url) || 'https://placehold.co/80x80/6d28d9/ffffff?text=Album';
-        const artistNames = track.artists.map(a=>a.name).join(', ');
-        originalAlbumArtUrl = imageUrl;
-        imageUpload.value = null;
-        if(!isCustomCoverActive) albumArtImg.src = imageUrl;
-        trackTitleSpan.textContent = track.name;
-        trackArtistSpan.textContent = `- ${artistNames}`;
-        // 선택 후 결과 남겨둘지 말지 선택 가능. 남겨두고 싶으면 아래 줄 주석 처리해도 됨.
-        // setResultsVisible(false);
-      };
+        layoutHorizontalBtn.addEventListener('click', ()=>{
+            playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal'); updatePlayerGradient();
+            layoutHorizontalBtn.classList.add('bg-purple-500','text-white'); layoutHorizontalBtn.classList.remove('bg-gray-200','text-gray-700');
+            layoutVerticalBtn.classList.add('bg-gray-200','text-gray-700'); layoutVerticalBtn.classList.remove('bg-purple-500','text-white');
+        });
+        layoutVerticalBtn.addEventListener('click', ()=>{
+            playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical'); updatePlayerGradient();
+            layoutVerticalBtn.classList.add('bg-purple-500','text-white'); layoutVerticalBtn.classList.remove('bg-gray-200','text-gray-700');
+            layoutHorizontalBtn.classList.add('bg-gray-200','text-gray-700'); layoutHorizontalBtn.classList.remove('bg-purple-500','text-white');
+        });
 
-      // 초기 설정
-      updatePlayerGradient(true);
-      setResultsVisible(false); // 시작 시 리스트/스크롤 숨김
+        // === Waveform Only (모듈) ===
+        function initWaveform(canvas, options = {}) {
+          if (!canvas) throw new Error('Waveform: canvas element required');
+          const cfg = {
+            barCount: 18, gap: 3, smoothing: 0.08,
+            baseSpeedHz: 0.6, rippleSpeedHz: 1.2,
+            baseWeight: 0.75, rippleWeight: 0.25,
+            minRatio: 0.25, maxRatio: 0.85,
+            fillStyle: 'rgba(255,255,255,0.88)',
+            glowBlur: 6, glowColor: 'rgba(255,255,255,0.35)',
+            ...options
+          };
+          const dpr = Math.max(1, window.devicePixelRatio || 1);
+          const ctx = canvas.getContext('2d');
+          let prevHeights = new Array(cfg.barCount).fill(0);
+          let targetHeights = new Array(cfg.barCount).fill(0);
+          let lastW=0,lastH=0, rafId=null, startedAt=null, running=false;
+          const easeCos = t => 0.5*(1-Math.cos(Math.PI*2*t));
 
-      // 검색 이벤트
-      const performSearch = ()=>{
-        const q = searchInput.value.trim();
-        if(q) searchTracks(q);
-        else{
-          statusDiv.textContent='';
-          setResultsVisible(false); // 입력 비우면 숨김
+          function resizeIfNeeded(){
+            const cssW = canvas.clientWidth || canvas.width || 120;
+            const cssH = canvas.clientHeight || canvas.height || 40;
+            if(cssW!==lastW || cssH!==lastH){
+              lastW=cssW; lastH=cssH;
+              canvas.width = Math.floor(cssW*dpr);
+              canvas.height = Math.floor(cssH*dpr);
+              ctx.setTransform(dpr,0,0,dpr,0,0);
+            }
+          }
+          function roundRect(ctx,x,y,w,h,r){
+            const rr=Math.min(r,w*.5,h*.5);
+            ctx.beginPath();
+            ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y);
+            ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+            ctx.lineTo(x+w,y+h-rr);
+            ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+            ctx.lineTo(x+rr,y+h);
+            ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+            ctx.lineTo(x,y+rr);
+            ctx.quadraticCurveTo(x,y,x+rr,y);
+            ctx.closePath();
+          }
+          function render(ts){
+            if(!startedAt) startedAt=ts;
+            const t=(ts-startedAt)/1000;
+            resizeIfNeeded();
+            const W = canvas.clientWidth || 120;
+            const H = canvas.clientHeight || 40;
+            ctx.clearRect(0,0,W,H);
+            const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+            ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
+            for(let i=0;i<cfg.barCount;i++){
+              const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
+              const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+              const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
+              const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+              targetHeights[i]=H*ratio;
+              const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+              prevHeights[i]=h;
+              const x=i*(barWidth+cfg.gap);
+              const y=H-h;
+              const r=Math.min(3,barWidth*0.35);
+              roundRect(ctx,x,y,barWidth,h,r);
+              ctx.fillStyle=cfg.fillStyle; ctx.fill();
+            }
+            ctx.shadowBlur=0; ctx.shadowColor='transparent';
+            rafId=requestAnimationFrame(render);
+          }
+          function start(){ if(running) return; running=true; startedAt=null; rafId=requestAnimationFrame(render); window.addEventListener('resize', resizeIfNeeded); }
+          function stop(){ running=false; if(rafId) cancelAnimationFrame(rafId); rafId=null; window.removeEventListener('resize', resizeIfNeeded); }
+          function setConfig(newCfg={}){ Object.assign(cfg,newCfg); }
+          function destroy(){ stop(); ctx.clearRect(0,0,canvas.width,canvas.height); }
+          start();
+          return { start, stop, setConfig, destroy, config: cfg };
         }
-      };
-      searchButton.addEventListener('click', performSearch);
-      searchInput.addEventListener('keyup', (e)=>{ if(e.key==='Enter') performSearch(); });
-      searchInput.addEventListener('input', (e)=>{ if(!e.target.value.trim()){ statusDiv.textContent=''; setResultsVisible(false); } });
+        // 모듈 사용
+        const wf = initWaveform(waveformCanvas, {
+          baseSpeedHz: 0.6,
+          rippleSpeedHz: 1.2,
+          smoothing: 0.08
+        });
+        // === /Waveform ===
+
+        // Spotify API
+        const getAccessToken = async () => {
+            if (clientId==='YOUR_SPOTIFY_CLIENT_ID' || clientSecret==='YOUR_SPOTIFY_CLIENT_SECRET'){
+                statusDiv.textContent = "Spotify API 키를 설정해주세요."; return null;
+            }
+            try{
+                const response = await fetch('https://accounts.spotify.com/api/token',{
+                    method:'POST',
+                    headers:{
+                        'Content-Type':'application/x-www-form-urlencoded',
+                        'Authorization':'Basic '+btoa(clientId+':'+clientSecret)
+                    },
+                    body:'grant_type=client_credentials'
+                });
+                if(!response.ok) throw new Error('Spotify token error: '+response.statusText);
+                const data = await response.json(); return data.access_token;
+            }catch(e){ console.error(e); statusDiv.textContent="API 토큰 인증에 실패했습니다."; return null; }
+        };
+
+        const searchTracks = async (query)=>{
+            if(!accessToken){ statusDiv.textContent="인증 중..."; accessToken = await getAccessToken(); if(!accessToken) return; }
+            statusDiv.textContent="검색 중..."; searchResultsContainer.innerHTML='';
+            try{
+                const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,{
+                    headers:{'Authorization':`Bearer ${accessToken}`}
+                });
+                if(!res.ok){
+                    if(res.status===401){ accessToken = await getAccessToken(); if(accessToken) searchTracks(query); }
+                    else throw new Error('Spotify API error: '+res.statusText);
+                    return;
+                }
+                const data = await res.json();
+                displayResults(data.tracks.items);
+            }catch(err){
+                console.error(err); statusDiv.textContent="검색 중 오류가 발생했습니다.";
+            }
+        };
+
+        const displayResults = (tracks)=>{
+            searchResultsContainer.innerHTML='';
+            if(!tracks.length){ statusDiv.textContent='검색 결과가 없습니다.'; return; }
+            statusDiv.textContent='';
+            tracks.forEach(track=>{
+                const card=document.createElement('div');
+                card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow group';
+                const albumImage = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/300x300/e9d5ff/a855f7?text=?';
+                const artistNames = track.artists.map(a=>a.name).join(', ');
+                card.innerHTML = `
+                  <div class="relative">
+                    <img src="${albumImage}" alt="${track.album.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
+                  </div>
+                  <div class="mt-2 text-center">
+                    <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
+                    <p class="text-xs text-gray-600 truncate">${artistNames}</p>
+                  </div>`;
+                card.addEventListener('click', ()=>updatePlayerUI(track));
+                searchResultsContainer.appendChild(card);
+            });
+        };
+
+        const updatePlayerUI = (track)=>{
+            const imageUrl = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/80x80/6d28d9/ffffff?text=Album';
+            const artistNames = track.artists.map(a=>a.name).join(', ');
+            originalAlbumArtUrl = imageUrl;
+            imageUpload.value = null;
+            if(!isCustomCoverActive) albumArtImg.src = imageUrl;
+            trackTitleSpan.textContent = track.name;
+            trackArtistSpan.textContent = `- ${artistNames}`;
+        };
+
+        // Init
+        updatePlayerGradient(true);
+        const performSearch = ()=>{ const q = searchInput.value.trim(); if(q) searchTracks(q); };
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
     });
-  </script>
+    </script>
 </body>
 </html>
