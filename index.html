@@ -99,7 +99,6 @@
             <h1 id="mainTitle" class="text-2xl font-bold text-purple-800">Music search</h1>
         </header>
 
-        <!-- Settings Section -->
         <div class="card mb-6 overflow-hidden">
             <div id="settingsToggle" class="flex justify-between items-center p-4 bg-purple-600 text-white cursor-pointer">
                 <h2 class="font-bold">설정 열기/닫기</h2>
@@ -117,8 +116,8 @@
                     <label for="imageUpload" class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
                     <div class="mt-2 flex space-x-2">
                          <label class="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
-                            <span>이미지 업로드</span>
-                            <input type="file" id="imageUpload" class="hidden" accept="image/*">
+                             <span>이미지 업로드</span>
+                             <input type="file" id="imageUpload" class="hidden" accept="image/*">
                          </label>
                          <button id="revertCover" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
                     </div>
@@ -149,21 +148,17 @@
         </div>
 
         <main class="card p-6">
-            <!-- Search Section -->
             <div class="flex items-center space-x-2">
                 <input type="text" id="searchInput" placeholder="아티스트나 곡명을 검색하세요..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
                 <button id="searchButton" class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform transform active:scale-95">
                     검색
                 </button>
             </div>
-             <!-- Loading and Results Section -->
-            <div id="status" class="text-center text-gray-500 mt-4 h-6"></div>
+             <div id="status" class="text-center text-gray-500 mt-4 h-6"></div>
             <div id="searchResults" class="mt-4 max-h-64 overflow-y-auto space-y-2">
-                <!-- Search results will be injected here -->
-            </div>
+                </div>
         </main>
 
-        <!-- Player Section (Now called "Card") -->
         <footer class="mt-8 flex justify-center">
             <div id="player" class="player flex p-4 rounded-2xl shadow-lg text-white transition-all duration-500 ease-in-out transform layout-horizontal">
                 <img id="albumArt" src="https://placehold.co/80x80/6d28d9/ffffff?text=Album" alt="Album Art" class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
@@ -179,7 +174,6 @@
                 </div>
                 <div class="controls-section flex items-center">
                     <div class="flex items-center space-x-2 text-2xl">
-                        <!-- Static decorative icons -->
                         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
                         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
                         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
@@ -194,8 +188,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
-            const clientId = '13ada5c13a834887b16d181b5730a8b3';
-            const clientSecret = 'e29f437d6c3d46509926b78b0fd885fb';
+            const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
+            const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
             // --- END CONFIGURATION ---
 
             const searchInput = document.getElementById('searchInput');
@@ -317,7 +311,25 @@
                 canvasCtx.clearRect(0, 0, width, height);
 
                 for (let i = 0; i < barCount; i++) {
-                    const barHeight = (Math.sin((frame + i * 5) * 0.03) + 1) * (height / 2.5) + (height * 0.1);
+                    
+                    // =======================================================
+                    // ✨✨ 여기가 수정된 부분입니다 ✨✨
+                    // =======================================================
+
+                    // 1. 느리고 큰 기본 파동 (전체적인 출렁임 담당)
+                    const baseWave = Math.sin((frame + i * 5) * 0.05); 
+
+                    // 2. 빠르고 작은 세부 파동 (잔물결 효과 담당)
+                    const rippleWave = Math.sin((frame + i * 3) * 0.2); 
+
+                    // 3. 두 파동을 7:3 비율로 섞어서 더 자연스러운 움직임 생성
+                    const combinedWave = baseWave * 0.7 + rippleWave * 0.3;
+
+                    // 4. 최종 높이 계산 (기존 로직에 합친 파동을 적용)
+                    const barHeight = (combinedWave + 1) * (height / 2.5) + (height * 0.1);
+
+                    // =======================================================
+
                     const x = i * (barWidth * 2 + 3);
                     const y = height - barHeight;
 
