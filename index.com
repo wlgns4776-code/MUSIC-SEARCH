@@ -194,8 +194,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
-            const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
-            const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
+            const clientId = '13ada5c13a834887b16d181b5730a8b3';
+            const clientSecret = 'e29f437d6c3d46509926b78b0fd885fb';
             // --- END CONFIGURATION ---
 
             const searchInput = document.getElementById('searchInput');
