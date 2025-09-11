@@ -125,9 +125,220 @@
     </div>
   </div>
 
-  <!-- ✅ 기존 JS는 그대로 유지 -->
   <script>
-    // 여기에 아까 쓰던 JS 그대로 붙여넣으면 됩니다.
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- CONFIG ---
+    const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
+    const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
+
+    // DOM
+    const playerDiv = document.getElementById('player');
+    const albumArtImg = document.getElementById('albumArt');
+    const trackTitleSpan = document.getElementById('trackTitle');
+    const trackArtistSpan = document.getElementById('trackArtist');
+    const artistNameP = document.getElementById('artistName');
+    const waveformCanvas = document.getElementById('waveformCanvas');
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const statusDiv = document.getElementById('status');
+    const searchResultsContainer = document.getElementById('searchResults');
+
+    const settingsIconBtn = document.getElementById('settingsIconBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const displayNameInput = document.getElementById('displayNameInput');
+    const applyDisplayName = document.getElementById('applyDisplayName');
+    const imageUpload = document.getElementById('imageUpload');
+    const revertCover = document.getElementById('revertCover');
+    const primaryColor = document.getElementById('primaryColor');
+    const secondaryColor = document.getElementById('secondaryColor');
+    const applyColors = document.getElementById('applyColors');
+    const resetColors = document.getElementById('resetColors');
+    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+    const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+
+    let accessToken = null;
+    let originalAlbumArtUrl = '';
+    let isCustomCoverActive = false;
+
+    // --- Helper: Results show/hide ---
+    const clearResults = () => {
+      searchResultsContainer.innerHTML = '';
+      searchResultsContainer.classList.add('hidden');
+    };
+    const showResults = () => {
+      searchResultsContainer.classList.remove('hidden');
+    };
+
+    // --- Gradient ---
+    function updatePlayerGradient(isReset=false){
+      const color1 = isReset ? '#A855F7' : primaryColor.value;
+      const color2 = isReset ? '#7C3AED' : secondaryColor.value;
+      const direction = playerDiv.classList.contains('layout-vertical') ? '180deg' : '90deg';
+      playerDiv.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
+    }
+
+    // Settings toggle
+    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+
+    // 채널명 적용
+    applyDisplayName.addEventListener('click', ()=>{
+      const v = displayNameInput.value.trim();
+      if(v) artistNameP.textContent = v;
+    });
+
+    // 커버 업로드/복원
+    imageUpload.addEventListener('change', e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ albumArtImg.src=ev.target.result; isCustomCoverActive=true; };
+      r.readAsDataURL(f);
+    });
+    revertCover.addEventListener('click', ()=>{ if(originalAlbumArtUrl) albumArtImg.src=originalAlbumArtUrl; isCustomCoverActive=false; });
+
+    // 색상 적용/기본값 + 실시간 미리보기
+    applyColors.addEventListener('click', ()=> updatePlayerGradient(false));
+    resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(true); });
+    primaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
+    secondaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
+
+    // 레이아웃 전환
+    layoutHorizontalBtn.addEventListener('click', ()=>{
+      playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
+      updatePlayerGradient(false);
+      layoutHorizontalBtn.classList.add('bg-purple-500','text-white');
+      layoutHorizontalBtn.classList.remove('bg-gray-200','text-gray-700');
+      layoutVerticalBtn.classList.add('bg-gray-200','text-gray-700');
+      layoutVerticalBtn.classList.remove('bg-purple-500','text-white');
+    });
+    layoutVerticalBtn.addEventListener('click', ()=>{
+      playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
+      updatePlayerGradient(false);
+      layoutVerticalBtn.classList.add('bg-purple-500','text-white');
+      layoutVerticalBtn.classList.remove('bg-gray-200','text-gray-700');
+      layoutHorizontalBtn.classList.add('bg-gray-200','text-gray-700');
+      layoutHorizontalBtn.classList.remove('bg-purple-500','text-white');
+    });
+
+    // --- Waveform (부드러운 모듈) ---
+    function initWaveform(canvas, options = {}) {
+      if (!canvas) return;
+      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const ctx = canvas.getContext('2d');
+      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
+      let lastW=0,lastH=0, rafId=null, startedAt=null;
+      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
+      function resizeIfNeeded(){
+        const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40;
+        if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+      }
+      function roundRect(ctx,x,y,w,h,r){
+        const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
+        ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+        ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+        ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
+      }
+      function render(ts){
+        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
+        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
+        ctx.clearRect(0,0,W,H);
+        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+        ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
+        for(let i=0;i<cfg.barCount;i++){
+          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
+          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+          const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
+          const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+          targetHeights[i]=H*ratio;
+          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+          prevHeights[i]=h;
+          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
+          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+        }
+        ctx.shadowBlur=0; ctx.shadowColor='transparent';
+        rafId=requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+      window.addEventListener('resize', resizeIfNeeded);
+      return { setConfig:newCfg=>Object.assign(cfg,newCfg) };
+    }
+    initWaveform(waveformCanvas);
+
+    // --- Spotify API ---
+    const getAccessToken = async () => {
+      if (clientId==='YOUR_SPOTIFY_CLIENT_ID' || clientSecret==='YOUR_SPOTIFY_CLIENT_SECRET'){
+        statusDiv.textContent="Spotify API 키를 설정해주세요."; return null;
+      }
+      try{
+        const res=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded','Authorization':'Basic '+btoa(clientId+':'+clientSecret)},body:'grant_type=client_credentials'});
+        if(!res.ok) throw new Error(res.statusText);
+        const data=await res.json(); return data.access_token;
+      }catch(e){ console.error(e); statusDiv.textContent="API 토큰 인증에 실패했습니다."; return null; }
+    };
+
+    const searchTracks = async (q) => {
+      if(!accessToken){ statusDiv.textContent="인증 중..."; accessToken=await getAccessToken(); if(!accessToken) return; }
+      statusDiv.textContent="검색 중..."; clearResults();
+      try{
+        const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20`,{headers:{'Authorization':`Bearer ${accessToken}`}});
+        if(!res.ok){
+          if(res.status===401){ accessToken=await getAccessToken(); if(accessToken) searchTracks(q); }
+          else throw new Error(res.statusText);
+          return;
+        }
+        const data=await res.json();
+        displayResults(data.tracks.items);
+      }catch(e){ console.error(e); statusDiv.textContent="검색 중 오류가 발생했습니다."; }
+    };
+
+    const displayResults = (tracks) => {
+      searchResultsContainer.innerHTML='';
+      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; clearResults(); return; }
+      statusDiv.textContent=''; showResults();
+      tracks.forEach(track=>{
+        const card=document.createElement('div');
+        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+        const albumImage = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/300x300/e9d5ff/a855f7?text=?';
+        const artistNames = track.artists.map(a=>a.name).join(', ');
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${albumImage}" alt="${track.album.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
+          </div>
+          <div class="mt-2 text-center">
+            <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
+            <p class="text-xs text-gray-600 truncate">${artistNames}</p>
+          </div>`;
+        card.addEventListener('click', ()=>updatePlayerUI(track));
+        searchResultsContainer.appendChild(card);
+      });
+    };
+
+    const updatePlayerUI = (track) => {
+      const imageUrl = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/80x80/6d28d9/ffffff?text=Album';
+      const artistNames = track.artists.map(a=>a.name).join(', ');
+      originalAlbumArtUrl = imageUrl;
+      imageUpload.value = null;
+      if(!isCustomCoverActive) albumArtImg.src = imageUrl;
+      trackTitleSpan.textContent = track.name;
+      trackArtistSpan.textContent = `- ${artistNames}`;
+    };
+
+    // 초기 상태
+    updatePlayerGradient(true);
+    clearResults();
+
+    // 검색 실행
+    const performSearch = () => {
+      const q = searchInput.value.trim();
+      if(!q){ statusDiv.textContent=''; clearResults(); return; }
+      searchTracks(q);
+    };
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
+    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
+  });
   </script>
 </body>
 </html>
