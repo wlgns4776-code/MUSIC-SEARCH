@@ -16,81 +16,27 @@
             border-radius: 20px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
-        /* .player background is now set by JS */
-        
         /* Custom scrollbar for search results */
-        #searchResults::-webkit-scrollbar {
-            width: 8px;
-        }
-        #searchResults::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        #searchResults::-webkit-scrollbar-thumb {
-            background: #C4B5FD; /* Lighter purple */
-            border-radius: 10px;
-        }
-        #searchResults::-webkit-scrollbar-thumb:hover {
-            background: #A78BFA; /* Darker purple on hover */
-        }
-        .settings-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
-        }
-        .settings-content.open {
-            max-height: 500px; /* Adjust as needed */
-        }
-        
-        /* Layout Styles */
-        .player.layout-horizontal {
-            flex-direction: row;
-            align-items: center;
-            width: 100%;
-        }
-        .player.layout-horizontal .album-art {
-            width: 5rem; /* 80px */
-            height: 5rem;
-        }
-        .player.layout-horizontal .info-section {
-            margin-left: 1rem;
-            text-align: left;
-        }
-        .player.layout-horizontal .info-section .flex {
-            justify-content: flex-start;
-        }
-        .player.layout-horizontal .controls-section {
-            flex-direction: row;
-            align-items: center;
-        }
+        #searchResults::-webkit-scrollbar { width: 8px; }
+        #searchResults::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        #searchResults::-webkit-scrollbar-thumb { background: #C4B5FD; border-radius: 10px; }
+        #searchResults::-webkit-scrollbar-thumb:hover { background: #A78BFA; }
+        .settings-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .settings-content.open { max-height: 500px; }
 
-        .player.layout-vertical {
-            flex-direction: column;
-            align-items: center;
-            width: 288px; /* w-72 */
-        }
-        .player.layout-vertical .album-art {
-            width: 10rem; /* 160px */
-            height: 10rem;
-        }
-        .player.layout-vertical .info-section {
-            margin-left: 0;
-            margin-top: 1rem;
-            text-align: center;
-            width: 100%; /* Ensure the container has a defined width */
-            padding: 0 1rem; /* Add horizontal padding */
-        }
-        .player.layout-vertical .info-section .flex {
-            justify-content: center;
-        }
-        .player.layout-vertical .controls-section {
-            flex-direction: column;
-            margin-top: 1rem;
-            gap: 0.5rem; /* space-y-2 */
-        }
-        .player.layout-vertical .controls-section canvas {
-            margin-left: 0;
-        }
+        /* Layout Styles */
+        .player.layout-horizontal { flex-direction: row; align-items: center; width: 100%; }
+        .player.layout-horizontal .album-art { width: 5rem; height: 5rem; }
+        .player.layout-horizontal .info-section { margin-left: 1rem; text-align: left; }
+        .player.layout-horizontal .info-section .flex { justify-content: flex-start; }
+        .player.layout-horizontal .controls-section { flex-direction: row; align-items: center; }
+
+        .player.layout-vertical { flex-direction: column; align-items: center; width: 288px; }
+        .player.layout-vertical .album-art { width: 10rem; height: 10rem; }
+        .player.layout-vertical .info-section { margin-left: 0; margin-top: 1rem; text-align: center; width: 100%; padding: 0 1rem; }
+        .player.layout-vertical .info-section .flex { justify-content: center; }
+        .player.layout-vertical .controls-section { flex-direction: column; margin-top: 1rem; gap: 0.5rem; }
+        .player.layout-vertical .controls-section canvas { margin-left: 0; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -102,7 +48,7 @@
         <div class="card mb-6 overflow-hidden">
             <div id="settingsToggle" class="flex justify-between items-center p-4 bg-purple-600 text-white cursor-pointer">
                 <h2 class="font-bold">설정 열기/닫기</h2>
-                <svg id="settingsArrow" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                <svg id="settingsArrow" class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
             <div id="settingsContent" class="settings-content p-6 space-y-6">
                 <div>
@@ -115,11 +61,11 @@
                 <div>
                     <label for="imageUpload" class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
                     <div class="mt-2 flex space-x-2">
-                         <label class="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
-                             <span>이미지 업로드</span>
-                             <input type="file" id="imageUpload" class="hidden" accept="image/*">
-                         </label>
-                         <button id="revertCover" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+                        <label class="cursor-pointer px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600">
+                            <span>이미지 업로드</span>
+                            <input type="file" id="imageUpload" class="hidden" accept="image/*">
+                        </label>
+                        <button id="revertCover" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
                     </div>
                 </div>
                 <div>
@@ -154,9 +100,8 @@
                     검색
                 </button>
             </div>
-             <div id="status" class="text-center text-gray-500 mt-4 h-6"></div>
-            <div id="searchResults" class="mt-4 max-h-64 overflow-y-auto space-y-2">
-                </div>
+            <div id="status" class="text-center text-gray-500 mt-4 h-6"></div>
+            <div id="searchResults" class="mt-4 max-h-64 overflow-y-auto space-y-2"></div>
         </main>
 
         <footer class="mt-8 flex justify-center">
@@ -174,15 +119,14 @@
                 </div>
                 <div class="controls-section flex items-center">
                     <div class="flex items-center space-x-2 text-2xl">
-                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
                         <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
                     </div>
                     <canvas id="waveformCanvas" width="120" height="40" class="ml-4"></canvas>
                 </div>
             </div>
         </footer>
-
     </div>
 
     <script>
@@ -196,7 +140,7 @@
             const searchButton = document.getElementById('searchButton');
             const searchResultsContainer = document.getElementById('searchResults');
             const statusDiv = document.getElementById('status');
-            
+
             const playerDiv = document.getElementById('player');
             const albumArtImg = document.getElementById('albumArt');
             const trackTitleSpan = document.getElementById('trackTitle');
@@ -219,10 +163,9 @@
             const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
             const waveformCanvas = document.getElementById('waveformCanvas');
 
-
             let accessToken = null;
-            let originalAlbumArtUrl = ''; // To store original spotify URL
-            let isCustomCoverActive = false; // To track if a custom image is uploaded
+            let originalAlbumArtUrl = '';
+            let isCustomCoverActive = false;
 
             // --- Gradient Update Function ---
             function updatePlayerGradient(isReset = false) {
@@ -232,18 +175,15 @@
                 playerDiv.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
             }
 
-            // --- Event Listeners for Settings ---
-
+            // --- Settings ---
             settingsToggle.addEventListener('click', () => {
                 settingsContent.classList.toggle('open');
                 settingsArrow.classList.toggle('rotate-180');
             });
-            
+
             applyDisplayName.addEventListener('click', () => {
                 const newChannelName = displayNameInput.value.trim();
-                if(newChannelName) {
-                    artistNameP.textContent = newChannelName;
-                }
+                if (newChannelName) artistNameP.textContent = newChannelName;
             });
 
             imageUpload.addEventListener('change', (event) => {
@@ -257,93 +197,140 @@
                     reader.readAsDataURL(file);
                 }
             });
-            
+
             revertCover.addEventListener('click', () => {
-                if(originalAlbumArtUrl) {
-                    albumArtImg.src = originalAlbumArtUrl;
-                }
+                if (originalAlbumArtUrl) albumArtImg.src = originalAlbumArtUrl;
                 isCustomCoverActive = false;
             });
-            
-            applyColors.addEventListener('click', () => updatePlayerGradient());
 
+            applyColors.addEventListener('click', () => updatePlayerGradient());
             resetColors.addEventListener('click', () => {
                 primaryColor.value = '#A855F7';
                 secondaryColor.value = '#7C3AED';
                 updatePlayerGradient(true);
             });
-            
+
             layoutHorizontalBtn.addEventListener('click', () => {
                 playerDiv.classList.remove('layout-vertical');
                 playerDiv.classList.add('layout-horizontal');
                 updatePlayerGradient();
-                
-                // Style buttons
-                layoutHorizontalBtn.classList.add('bg-purple-500', 'text-white');
-                layoutHorizontalBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                layoutVerticalBtn.classList.add('bg-gray-200', 'text-gray-700');
-                layoutVerticalBtn.classList.remove('bg-purple-500', 'text-white');
+                layoutHorizontalBtn.classList.add('bg-purple-500','text-white');
+                layoutHorizontalBtn.classList.remove('bg-gray-200','text-gray-700');
+                layoutVerticalBtn.classList.add('bg-gray-200','text-gray-700');
+                layoutVerticalBtn.classList.remove('bg-purple-500','text-white');
             });
 
             layoutVerticalBtn.addEventListener('click', () => {
                 playerDiv.classList.remove('layout-horizontal');
                 playerDiv.classList.add('layout-vertical');
                 updatePlayerGradient();
-                
-                // Style buttons
-                layoutVerticalBtn.classList.add('bg-purple-500', 'text-white');
-                layoutVerticalBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                layoutHorizontalBtn.classList.add('bg-gray-200', 'text-gray-700');
-                layoutHorizontalBtn.classList.remove('bg-purple-500', 'text-white');
+                layoutVerticalBtn.classList.add('bg-purple-500','text-white');
+                layoutVerticalBtn.classList.remove('bg-gray-200','text-gray-700');
+                layoutHorizontalBtn.classList.add('bg-gray-200','text-gray-700');
+                layoutHorizontalBtn.classList.remove('bg-purple-500','text-white');
             });
 
-            // --- Decorative Waveform Animation ---
-            const canvasCtx = waveformCanvas.getContext('2d');
-            let frame = 0;
+            // --- Decorative Waveform Animation (부드럽고 천천히) ---
+            (function () {
+              const dpr = Math.max(1, window.devicePixelRatio || 1);
+              const canvas = waveformCanvas;
+              const ctx = canvas.getContext('2d');
 
-            function drawDecorativeWaveform() {
-                frame++;
-                const width = waveformCanvas.width;
-                const height = waveformCanvas.height;
-                const barCount = 15;
-                const barWidth = width / barCount / 2;
+              const BAR_COUNT = 18;
+              const GAP = 3;
+              const SMOOTHING = 0.08;
 
-                canvasCtx.clearRect(0, 0, width, height);
+              const BASE_SPEED_HZ = 0.6;
+              const RIPPLE_SPEED_HZ = 1.2;
+              const BASE_WEIGHT = 0.75;
+              const RIPPLE_WEIGHT = 0.25;
 
-                for (let i = 0; i < barCount; i++) {
-                    
-                    // =======================================================
-                    // ✨✨ 여기가 수정된 부분입니다 ✨✨
-                    // =======================================================
+              let prevHeights = new Array(BAR_COUNT).fill(0);
+              let targetHeights = new Array(BAR_COUNT).fill(0);
+              let lastW = 0, lastH = 0;
 
-                    // 1. 느리고 큰 기본 파동 (전체적인 출렁임 담당)
-                    const baseWave = Math.sin((frame + i * 5) * 0.05); 
+              function resizeIfNeeded() {
+                const cssW = canvas.clientWidth || 120;
+                const cssH = canvas.clientHeight || 40;
+                if (cssW !== lastW || cssH !== lastH) {
+                  lastW = cssW; lastH = cssH;
+                  canvas.width = Math.floor(cssW * dpr);
+                  canvas.height = Math.floor(cssH * dpr);
+                  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                }
+              }
 
-                    // 2. 빠르고 작은 세부 파동 (잔물결 효과 담당)
-                    const rippleWave = Math.sin((frame + i * 3) * 0.2); 
+              const easeCos = (t) => 0.5 * (1 - Math.cos(Math.PI * 2 * t)); // 0~1
 
-                    // 3. 두 파동을 7:3 비율로 섞어서 더 자연스러운 움직임 생성
-                    const combinedWave = baseWave * 0.7 + rippleWave * 0.3;
+              let start = null;
+              function render(ts) {
+                if (!start) start = ts;
+                const t = (ts - start) / 1000;
 
-                    // 4. 최종 높이 계산 (기존 로직에 합친 파동을 적용)
-                    const barHeight = (combinedWave + 1) * (height / 2.5) + (height * 0.1);
+                resizeIfNeeded();
 
-                    // =======================================================
+                const W = canvas.clientWidth || 120;
+                const H = canvas.clientHeight || 40;
+                ctx.clearRect(0, 0, W, H);
 
-                    const x = i * (barWidth * 2 + 3);
-                    const y = height - barHeight;
+                const barWidth = Math.max(2, (W - (BAR_COUNT - 1) * GAP) / BAR_COUNT);
 
-                    canvasCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-                    canvasCtx.fillRect(x, y, barWidth, barHeight);
+                ctx.shadowBlur = 6;
+                ctx.shadowColor = 'rgba(255,255,255,0.35)';
+
+                for (let i = 0; i < BAR_COUNT; i++) {
+                  const basePhase = i * 0.18;
+                  const ripplePhase = i * 0.35;
+
+                  const base = easeCos((t * BASE_SPEED_HZ + basePhase) % 1);
+                  const ripple = easeCos((t * RIPPLE_SPEED_HZ + ripplePhase) % 1);
+
+                  const mix = BASE_WEIGHT * base + RIPPLE_WEIGHT * ripple;
+
+                  const MIN_RATIO = 0.25;
+                  const MAX_RATIO = 0.85;
+                  const ratio = MIN_RATIO + (MAX_RATIO - MIN_RATIO) * mix;
+
+                  targetHeights[i] = H * ratio;
+
+                  const h = prevHeights[i] + (targetHeights[i] - prevHeights[i]) * SMOOTHING;
+                  prevHeights[i] = h;
+
+                  const x = i * (barWidth + GAP);
+                  const y = H - h;
+
+                  const r = Math.min(3, barWidth * 0.35);
+                  roundRect(ctx, x, y, barWidth, h, r);
+                  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+                  ctx.fill();
                 }
 
-                requestAnimationFrame(drawDecorativeWaveform);
-            }
-            drawDecorativeWaveform();
+                ctx.shadowBlur = 0;
+                ctx.shadowColor = 'transparent';
 
+                requestAnimationFrame(render);
+              }
 
-            // --- Spotify API Functions ---
+              function roundRect(ctx, x, y, w, h, r) {
+                const rr = Math.min(r, w * 0.5, h * 0.5);
+                ctx.beginPath();
+                ctx.moveTo(x + rr, y);
+                ctx.lineTo(x + w - rr, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + rr);
+                ctx.lineTo(x + w, y + h - rr);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - rr, y + h);
+                ctx.lineTo(x + rr, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - rr);
+                ctx.lineTo(x, y + rr);
+                ctx.quadraticCurveTo(x, y, x + rr, y);
+                ctx.closePath();
+              }
 
+              requestAnimationFrame(render);
+              window.addEventListener('resize', resizeIfNeeded);
+            })();
+
+            // --- Spotify API ---
             const getAccessToken = async () => {
                 if (clientId === 'YOUR_SPOTIFY_CLIENT_ID' || clientSecret === 'YOUR_SPOTIFY_CLIENT_SECRET') {
                     console.error("Spotify Client ID/Secret is not set. Please update the script.");
@@ -359,9 +346,7 @@
                         },
                         body: 'grant_type=client_credentials'
                     });
-
                     if (!response.ok) throw new Error(`Spotify token error: ${response.statusText}`);
-                    
                     const data = await response.json();
                     return data.access_token;
                 } catch (error) {
@@ -375,9 +360,8 @@
                 if (!accessToken) {
                     statusDiv.textContent = "인증 중...";
                     accessToken = await getAccessToken();
-                    if(!accessToken) return;
+                    if (!accessToken) return;
                 }
-
                 statusDiv.textContent = "검색 중...";
                 searchResultsContainer.innerHTML = '';
 
@@ -387,9 +371,9 @@
                     });
 
                     if (!response.ok) {
-                        if(response.status === 401) {
-                             accessToken = await getAccessToken();
-                             if(accessToken) searchTracks(query);
+                        if (response.status === 401) {
+                            accessToken = await getAccessToken();
+                            if (accessToken) searchTracks(query);
                         } else {
                             throw new Error(`Spotify API error: ${response.statusText}`);
                         }
@@ -403,7 +387,7 @@
                     statusDiv.textContent = "검색 중 오류가 발생했습니다.";
                 }
             };
-            
+
             const displayResults = (tracks) => {
                 if (tracks.length === 0) {
                     statusDiv.textContent = '검색 결과가 없습니다.';
@@ -414,7 +398,7 @@
                 tracks.forEach(track => {
                     const trackDiv = document.createElement('div');
                     trackDiv.className = 'flex items-center p-2 rounded-lg cursor-pointer hover:bg-gray-100 transition';
-                    
+
                     const albumImage = track.album.images[2] ? track.album.images[2].url : 'https://placehold.co/64x64/f3e8ff/6d28d9?text=?';
                     const artistNames = track.artists.map(artist => artist.name).join(', ');
 
@@ -425,7 +409,7 @@
                             <p class="text-sm text-gray-500 truncate">${artistNames}</p>
                         </div>
                     `;
-                    
+
                     trackDiv.addEventListener('click', () => updatePlayerUI(track));
                     searchResultsContainer.appendChild(trackDiv);
                 });
@@ -438,27 +422,21 @@
                 originalAlbumArtUrl = imageUrl;
                 imageUpload.value = null;
 
-                if (!isCustomCoverActive) {
-                    albumArtImg.src = imageUrl;
-                }
-                
+                if (!isCustomCoverActive) albumArtImg.src = imageUrl;
+
                 trackTitleSpan.textContent = track.name;
                 trackArtistSpan.textContent = `- ${artistNames}`;
             };
 
-            // --- Initial Setup & Event Listeners for Search ---
-            updatePlayerGradient(true); // Set initial gradient
+            // --- Initial ---
+            updatePlayerGradient(true);
 
             const performSearch = () => {
-                 const query = searchInput.value.trim();
+                const query = searchInput.value.trim();
                 if (query) searchTracks(query);
             };
-            
             searchButton.addEventListener('click', performSearch);
-            searchInput.addEventListener('keyup', (event) => {
-                if (event.key === 'Enter') performSearch();
-            });
-
+            searchInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') performSearch(); });
         });
     </script>
 </body>
