@@ -317,7 +317,7 @@
                 canvasCtx.clearRect(0, 0, width, height);
 
                 for (let i = 0; i < barCount; i++) {
-                    const barHeight = (Math.sin((frame + i * 5) * 0.01) + 1) * (height / 2.5) + (height * 0.1);
+                    const barHeight = (Math.sin((frame + i * 5) * 0.03) + 1) * (height / 2.5) + (height * 0.1);
                     const x = i * (barWidth * 2 + 3);
                     const y = height - barHeight;
 
