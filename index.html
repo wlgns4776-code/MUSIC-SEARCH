@@ -13,17 +13,15 @@
     }
     body{font-family:'Noto Sans KR',sans-serif;background:#F3E8FF}
 
-    /* 카드 공통 */
     .card{background:#fff;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)}
 
-    /* 결과 스크롤 */
     #searchResults::-webkit-scrollbar{width:8px}
     #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
 
-    /* Player 레이아웃(충돌 방지용으로 명시) */
-    #player{display:flex; color:#fff; /* 텍스트 흰색 고정 */ 
+    #player{
+      display:flex; color:#fff;
       background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
       border-radius:1rem; box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
     }
@@ -32,14 +30,11 @@
     #player.layout-vertical{flex-direction:column;align-items:center;width:320px}
     #player.layout-vertical .album-art{width:10rem;height:10rem}
 
-    /* 텍스트 가독성 보조 */
     .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
 
-    /* 설정 패널 애니메이션 */
     #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
     #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
 
-    /* 캔버스는 반응형 너비를 쓰고 고정 높이 */
     #waveformCanvas{width:120px;height:40px}
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
   </style>
@@ -58,7 +53,6 @@
 
         <div class="flex-grow min-w-0 ml-4">
           <h2 class="font-bold text-lg flex flex-wrap items-baseline gap-1 text-glow">
-            <!-- 제목: 화면폭에 맞춰 자연스럽게 줄어듦 -->
             <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[460px]">노래 제목</span>
             <span id="trackArtist" class="opacity-90"></span>
           </h2>
@@ -98,7 +92,6 @@
     <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
 
     <section>
-      <!-- 처음엔 숨김, 결과 오면 grid로 표시 -->
       <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
     </section>
   </div>
@@ -143,7 +136,7 @@
         </div>
       </div>
 
-      <!-- 레이아웃 -->
+      <!-- 카드 레이아웃 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
         <div class="mt-2 flex flex-row items-center gap-2">
@@ -151,16 +144,25 @@
           <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
         </div>
       </div>
+
+      <!-- 파형 속도 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">파형 속도</label>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-gray-500 leading-none">느리게</span>
+          <input id="waveSpeedRange" type="range" min="0.4" max="2.0" step="0.05" value="1"
+                 class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500" />
+          <span class="text-xs text-gray-500 leading-none">빠르게</span>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
   document.addEventListener('DOMContentLoaded', () => {
-    // --- CONFIG (사용 중인 키 그대로 유지) ---
     const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
     const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
 
-    // DOM
     const playerDiv = document.getElementById('player');
     const albumArtImg = document.getElementById('albumArt');
     const trackTitleSpan = document.getElementById('trackTitle');
@@ -186,11 +188,13 @@
     const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
     const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
 
+    // 새로 추가: 파형 속도 슬라이더
+    const waveSpeedRange = document.getElementById('waveSpeedRange');
+
     let accessToken = null;
     let originalAlbumArtUrl = '';
     let isCustomCoverActive = false;
 
-    // 결과 show/hide
     const clearResults = () => {
       searchResultsContainer.innerHTML = '';
       searchResultsContainer.classList.add('hidden');
@@ -199,7 +203,6 @@
       searchResultsContainer.classList.remove('hidden');
     };
 
-    // Player 그라데이션 업데이트
     function updatePlayerGradient(isReset=false){
       const color1 = isReset ? '#A855F7' : primaryColor.value;
       const color2 = isReset ? '#7C3AED' : secondaryColor.value;
@@ -209,16 +212,12 @@
       document.documentElement.style.setProperty('--ply-secondary', color2);
     }
 
-    // 설정 패널 토글
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
-
-    // 채널명 적용
     applyDisplayName.addEventListener('click', ()=>{
       const v = displayNameInput.value.trim();
       if(v) artistNameP.textContent = v;
     });
 
-    // 커버 업로드/복원
     imageUpload.addEventListener('change', e=>{
       const f=e.target.files[0]; if(!f) return;
       const r=new FileReader();
@@ -227,7 +226,6 @@
     });
     revertCover.addEventListener('click', ()=>{ if(originalAlbumArtUrl) albumArtImg.src=originalAlbumArtUrl; isCustomCoverActive=false; });
 
-    // 색상 적용/리셋 + 실시간 미리보기
     applyColors.addEventListener('click', ()=> updatePlayerGradient(false));
     resetColors.addEventListener('click', ()=>{
       primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(true);
@@ -235,7 +233,6 @@
     primaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
     secondaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
 
-    // 레이아웃 전환 (버튼 상태 동기화 포함)
     function setBtnOn(btn){ btn.classList.add('bg-purple-500','text-white'); btn.classList.remove('bg-gray-200','text-gray-700'); }
     function setBtnOff(btn){ btn.classList.add('bg-gray-200','text-gray-700'); btn.classList.remove('bg-purple-500','text-white'); }
 
@@ -250,10 +247,18 @@
       updatePlayerGradient(false);
     });
 
-    // 파형 애니메이션
+    // 파형 애니메이션: 컨트롤러 반환하도록 수정
     function initWaveform(canvas, options = {}) {
-      if (!canvas) return;
-      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(0,0,0,0.0)', ...options };
+      if (!canvas) return null;
+      const cfg = {
+        barCount:18, gap:3, smoothing:0.08,
+        baseSpeedHz:0.6, rippleSpeedHz:1.2,
+        baseWeight:0.75, rippleWeight:0.25,
+        minRatio:0.25, maxRatio:0.85,
+        fillStyle:'rgba(255,255,255,0.88)',
+        glowBlur:6, glowColor:'rgba(0,0,0,0.0)',
+        ...options
+      };
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const ctx = canvas.getContext('2d');
       let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
@@ -298,8 +303,30 @@
       }
       requestAnimationFrame(render);
       window.addEventListener('resize', resizeIfNeeded);
+
+      // 컨트롤러: 속도 조절
+      const base0 = 0.6, ripple0 = 1.2;
+      return {
+        setSpeed(multiplier){
+          // 최소 0.1 방어
+          const m = Math.max(0.1, Number(multiplier)||1);
+          cfg.baseSpeedHz   = base0   * m;
+          cfg.rippleSpeedHz = ripple0 * m;
+        }
+      };
     }
-    initWaveform(waveformCanvas);
+
+    // 컨트롤러 보관
+    const waveformCtrl = initWaveform(waveformCanvas);
+
+    // 파형 속도 슬라이더 연동
+    if (waveSpeedRange && waveformCtrl){
+      const applySpeed = () => {
+        waveformCtrl.setSpeed(waveSpeedRange.value);
+      };
+      waveSpeedRange.addEventListener('input', applySpeed);
+      applySpeed(); // 초기값 적용
+    }
 
     // Spotify API
     const getAccessToken = async () => {
@@ -371,11 +398,9 @@
       trackArtistSpan.textContent = `- ${artistNames}`;
     };
 
-    // 초기 상태
     updatePlayerGradient(true);
     clearResults();
 
-    // 검색 실행
     const performSearch = () => {
       const q = searchInput.value.trim();
       if(!q){ statusDiv.textContent=''; clearResults(); return; }
