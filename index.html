@@ -15,13 +15,32 @@
     #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
     /* 플레이어 */
-    .player.layout-horizontal{flex-direction:row;align-items:center;width:100%}
+    .player.layout-horizontal{flex-direction:row;align-items:center;width:100%;}
     .player.layout-horizontal .album-art{width:5rem;height:5rem}
     .player.layout-vertical{flex-direction:column;align-items:center;width:288px}
     .player.layout-vertical .album-art{width:10rem;height:10rem}
     /* 설정 패널 */
     #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
     #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+    /* 파형 속도 슬라이더 기본 스타일 (Tailwind CSS와 호환) */
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background-color: #8B5CF6; /* purple-500 */
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background-color: #8B5CF6; /* purple-500 */
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -110,15 +129,15 @@
           <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
         </div>
       </div>
-
-                  <div>
+      
+            <div>
         <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
         <div class="mt-2 flex flex-row items-center gap-2">
           <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
           <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
         </div>
       </div>
-      
+
       <div>
         <label class="block text-sm font-medium text-gray-700">파형 속도</label>
         <div class="mt-2 flex items-center gap-3 text-xs text-gray-500">
@@ -161,7 +180,6 @@
     const resetColors = document.getElementById('resetColors');
     const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
     const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
-    // ⭐ 파형 슬라이더 DOM 요소 추가
     const waveformSpeedSlider = document.getElementById('waveformSpeedSlider');
 
     let accessToken = null;
@@ -272,8 +290,7 @@
       return { setConfig:newCfg=>Object.assign(cfg,newCfg) };
     }
     
-    // ⭐ Waveform 인스턴스 저장 및 속도 조절 이벤트 리스너 추가
-    const waveform = initWaveform(waveformCanvas);
+    const waveform = initWaveform(waveformCanvas);
     waveformSpeedSlider.addEventListener('input', () => {
         const speedMultiplier = parseFloat(waveformSpeedSlider.value);
         const newBaseSpeed = 0.6 * speedMultiplier;
