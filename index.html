@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Search (Overlay)</title>
+  <title>Music Search</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -12,24 +12,19 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* ✅ 브라우저 소스 최적화: 완전 투명 + 스크롤 제거 + 전체 채움 */
-    html, body{
+    /* ✅ 기본: 완전 투명 (방송용) */
+    html, body {
       margin:0; padding:0;
-      width:100%; height:100%;
-      overflow:hidden;                 /* 스크롤바/여백 제거 */
-      background:transparent !important;
-      background-color:transparent !important;
+      background: rgba(0,0,0,0) !important;
+      background-color: rgba(0,0,0,0) !important;
     }
-    body{
-      font-family:'Noto Sans KR',sans-serif;
-      display:flex; align-items:center; justify-content:center;  /* 중앙 정렬 */
-    }
+    body{font-family:'Noto Sans KR',sans-serif}
 
-    /* 카드(검색 패널 등)는 필요 시만 보이게 — 기본 투명 */
+    /* 카드(검색 패널 등) — 필요 시 투명/반투명 조절 */
     .card{
-      background: rgba(255,255,255,0);
+      background: rgba(255,255,255,0); /* 완전 투명 (원하면 0.9 등으로 조절) */
       border-radius:20px;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
     }
 
     #searchResults::-webkit-scrollbar{width:8px}
@@ -56,14 +51,11 @@
 
     #waveformCanvas{width:120px;height:40px}
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
-
-    /* 전체 폭을 차지하게 하는 래퍼(가운데 카드만 투명 배경 위에 보임) */
-    .container{width:100%; max-width:1100px; padding:16px; box-sizing:border-box;}
   </style>
 </head>
 
-<body>
-  <div class="container">
+<body class="flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-3xl mx-auto p-4">
 
     <!-- Player -->
     <div class="mb-8 flex justify-center">
@@ -113,7 +105,7 @@
     </section>
   </div>
 
-  <!-- 설정 버튼 & 패널 (투명 토글 없음) -->
+  <!-- 설정 버튼 & 패널 -->
   <div class="fixed bottom-6 right-6 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -151,6 +143,17 @@
           <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
           <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
         </div>
+      </div>
+
+      <!-- ✅ 배경 색상 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">배경 색상</label>
+        <div class="mt-2 flex items-center gap-3">
+          <input id="bgColorPicker" type="color" value="#000000" class="w-10 h-10 p-1 border rounded-md cursor-pointer">
+          <button id="applyBgColor" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetBgColor" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">기본은 완전 투명입니다. 필요할 때만 색상을 적용하세요.</p>
       </div>
 
       <!-- 레이아웃 -->
@@ -200,6 +203,11 @@
     const speedInput = document.getElementById('speedInput');
     const speedVal = document.getElementById('speedVal');
 
+    /* 배경 색상 DOM */
+    const bgColorPicker = document.getElementById('bgColorPicker');
+    const applyBgColor = document.getElementById('applyBgColor');
+    const resetBgColor = document.getElementById('resetBgColor');
+
     const PLACEHOLDER = albumArtImg.src;
     let originalAlbumArtUrl = PLACEHOLDER;
 
@@ -226,6 +234,18 @@
       }
     }
 
+    /* ✅ 배경 적용/리셋 */
+    function setBackgroundColor(color){ // color: '#rrggbb' or 'rgba(...)'
+      document.documentElement.style.setProperty('background', color, 'important');
+      document.documentElement.style.setProperty('background-color', color, 'important');
+      document.body.style.setProperty('background', color, 'important');
+      document.body.style.setProperty('background-color', color, 'important');
+    }
+    function resetBackgroundToTransparent(){
+      const transparent = 'rgba(0,0,0,0)';
+      setBackgroundColor(transparent);
+    }
+
     /* -------------------- Settings interactions -------------------- */
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
     applyDisplayName.addEventListener('click', ()=>{ const v=displayNameInput.value.trim(); if(v) artistNameP.textContent=v; });
@@ -240,6 +260,13 @@
 
     applyColors.addEventListener('click', updatePlayerGradient);
     resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
+
+    /* 배경 색상 이벤트 */
+    applyBgColor.addEventListener('click', ()=>{
+      const color = bgColorPicker.value || '#000000';
+      setBackgroundColor(color);
+    });
+    resetBgColor.addEventListener('click', resetBackgroundToTransparent);
 
     layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
     layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
@@ -409,8 +436,19 @@
 
     /* -------------------- Init -------------------- */
     updatePlayerGradient();
-    applySpeedUI();
+    resetBackgroundToTransparent();   // 시작은 항상 투명
     setLayout('horizontal');
+    // 파형 속도 초기 반영
+    const speedInput = document.getElementById('speedInput');
+    const speedVal = document.getElementById('speedVal');
+    function applySpeedUI(){
+      const v = parseFloat(speedInput.value || "1");
+      speedVal.textContent = v.toFixed(2)+"x";
+      waveform?.setSpeed(v);
+    }
+    const waveform = (function(){ const c=document.getElementById('waveformCanvas'); return (function initWaveform(canvas, options={}){ if(!canvas) return; const cfg={barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)',...options}; const dpr=Math.max(1, window.devicePixelRatio||1); const ctx=canvas.getContext('2d'); let prev=new Array(cfg.barCount).fill(0), target=new Array(cfg.barCount).fill(0); let lastW=0,lastH=0, t0=null; const ease=x=>0.5*(1-Math.cos(Math.PI*2*x)); function resize(){ const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40; if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);} } function rrect(ctx,x,y,w,h,r){ const rr=Math.min(r,w*.5,h*.5); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr); ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h); ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr); ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath(); } function frame(ts){ if(!t0) t0=ts; const t=(ts-t0)/1000; resize(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40; ctx.clearRect(0,0,W,H); const bw=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount); ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor; for(let i=0;i<cfg.barCount;i++){ const base=ease((t*cfg.baseSpeedHz+i*0.18)%1); const ripple=ease((t*cfg.rippleSpeedHz+i*0.35)%1); const mix=cfg.baseWeight*base+cfg.rippleWeight*ripple; const ratio=cfg.minRatio+(cfg.maxRatio-cfg.minRatio)*mix; target[i]=H*ratio; const h=prev[i]+(target[i]-prev[i])*cfg.smoothing; prev[i]=h; const x=i*(bw+cfg.gap), y=H-h, r=Math.min(3,bw*0.35); rrect(ctx,x,y,bw,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill(); } ctx.shadowBlur=0; ctx.shadowColor='transparent'; requestAnimationFrame(frame);} requestAnimationFrame(frame); window.addEventListener('resize', resize); return { setSpeed(mult){ mult=Math.max(0.1,Math.min(5,mult||1)); cfg.baseSpeedHz=0.6*mult; cfg.rippleSpeedHz=1.2*mult; } }; })(c); })();
+    speedInput.addEventListener('input', applySpeedUI);
+    applySpeedUI();
   </script>
 </body>
 </html>
