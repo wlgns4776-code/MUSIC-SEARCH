@@ -40,9 +40,8 @@
     const enterBtn  = document.getElementById('enterBtn');
     const clearBtn  = document.getElementById('clearBtn');
 
-    // 최근 이름이 있을 때만 채움 (없으면 비워둠)
-    const last = localStorage.getItem('currentProfile');
-    if (last) nameInput.value = last;
+    // ✅ 자동 채움 금지: 저장된 값이 있어도 절대 넣지 않음
+    // (그래도 최근 이름은 유지하고 싶으면 버튼으로만 지우게)
 
     enterBtn.addEventListener('click', () => {
       const name = nameInput.value.trim();
