@@ -12,15 +12,28 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* 기본(브라우저 미리보기)은 흰 배경, OBS/프릭샷은 체크박스/쿼리로 투명 전환 */
-    /* 임베드용: 기본 투명 강제 (프릭샷/OBS에서 흰 바탕 남는 이슈 방지) */
-    html, body { margin:0; padding:0; background: rgba(0,0,0,0) !important; }
+    /* ✅ 기본 투명 (프릭샷/OBS용) — 미리보기는 ?white=1 로 흰 배경 전환 */
+    html, body {
+      margin:0; padding:0;
+      background: rgba(0,0,0,0) !important;
+      background-color: rgba(0,0,0,0) !important;
+    }
     body{font-family:'Noto Sans KR',sans-serif}
 
+    /* 카드(검색 패널 등)도 기본 투명 */
     .card{
-      background:#fff;
+      background: rgba(255,255,255,0);
       border-radius:20px;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
+    }
+
+    /* 🔁 미리보기용 강제 흰 배경 모드: ?white=1 또는 토글 해제 시 */
+    .preview-white, .preview-white body{
+      background:#ffffff !important;
+      background-color:#ffffff !important;
+    }
+    .preview-white .card{
+      background:#ffffff !important;
     }
 
     #searchResults::-webkit-scrollbar{width:8px}
@@ -87,7 +100,7 @@
     <section class="card p-4 mb-6">
       <div class="flex w-full items-center gap-2">
         <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
-               class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+               class="flex-grow px-4 py-2 bg-white/90 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
         <button id="searchButton"
                 class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">
           검색
@@ -107,7 +120,7 @@
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
 
-    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
+    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white/90 p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
       <!-- 표시 채널명 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
@@ -168,17 +181,30 @@
   </div>
 
   <script>
-    /* ---------- OBS/프릭샷 자동 투명: ?transparent=1 또는 UA 감지 ---------- */
+    /* ---------- 임베드/미리보기 배경 모드 결정 ---------- */
     (function(){
       const qs = new URLSearchParams(location.search);
-      const want = qs.get('transparent') === '1';
-      const looksLikeObs = /obs|frikshot/i.test(navigator.userAgent);
-      if (want || looksLikeObs) {
-        document.documentElement.style.background = 'transparent';
-        document.documentElement.style.backgroundColor = 'rgba(0,0,0,0)';
-        document.body.style.background = 'transparent';
-        document.body.style.backgroundColor = 'rgba(0,0,0,0)';
+      const wantTransparent = qs.get('transparent') === '1';
+      const wantWhite = qs.get('white') === '1'; // 미리보기 강제 흰 배경
+      const ua = navigator.userAgent;
+      // 주요 방송/캡처 앱 UA 포함
+      const looksLikeCaptureApp = /obs|frik|frikshot|prism|prismlive|xsplit|streamlabs|slobs/i.test(ua);
+
+      // 흰 배경 우선 (미리보기)
+      if (wantWhite) {
+        document.documentElement.classList.add('preview-white');
+        document.body.classList.add('preview-white');
+        return;
+      }
+
+      // 투명 모드: 기본(캡처앱 감지) 또는 ?transparent=1
+      if (wantTransparent || looksLikeCaptureApp) {
+        // 이미 CSS 기본이 투명 — 토글 UI만 동기화
         setTimeout(()=>{ const el=document.getElementById('transparentToggle'); if(el) el.checked=true; }, 0);
+      } else {
+        // 일반 브라우저 접근 시는 흰 배경 미리보기
+        document.documentElement.classList.add('preview-white');
+        document.body.classList.add('preview-white');
       }
     })();
 
@@ -211,7 +237,7 @@
     const speedVal = document.getElementById('speedVal');
     const transparentToggle = document.getElementById('transparentToggle');
 
-    const PLACEHOLDER = albumArtImg.src; // 인라인 SVG
+    const PLACEHOLDER = albumArtImg.src;
     let originalAlbumArtUrl = PLACEHOLDER;
 
     /* -------------------- Helpers -------------------- */
@@ -256,16 +282,15 @@
     layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
     layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
 
+    /* 🔁 투명 토글: 해제 시 미리보기(흰 배경) 모드로 전환 */
     transparentToggle.addEventListener('change', (e)=>{
       const on = e.target.checked;
       if (on){
-        document.documentElement.style.background = 'transparent';
-        document.documentElement.style.backgroundColor = 'rgba(0,0,0,0)';
-        document.body.style.background = 'transparent';
-        document.body.style.backgroundColor = 'rgba(0,0,0,0)';
+        document.documentElement.classList.remove('preview-white');
+        document.body.classList.remove('preview-white');
       } else {
-        document.documentElement.style.background = '#ffffff';
-        document.body.style.background = '#ffffff';
+        document.documentElement.classList.add('preview-white');
+        document.body.classList.add('preview-white');
       }
     });
 
@@ -325,8 +350,8 @@
 
     /* -------------------- Search: Spotify 기본, 실패 시 iTunes 폴백 -------------------- */
     // ⚠️ 배포용은 절대 프론트에 Secret 넣지 마세요!
-    const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";      // 예: "13ada5c13a834887b16d181b5730a8b3"
-    const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";  // 예: "e29f4...." (배포 금지)
+    const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
+    const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";
 
     let spotifyToken = null;
 
@@ -354,7 +379,7 @@
       const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
         headers:{'Authorization':`Bearer ${spotifyToken}`}
       });
-      if(res.status===401){ // 토큰 만료 재시도
+      if(res.status===401){
         spotifyToken = await getSpotifyToken();
         if (!spotifyToken) return null;
         return searchSpotify(q);
@@ -372,11 +397,11 @@
     async function searchItunes(q){
       const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=24`);
       const data = await res.json();
-      return (data.results||[]).map(it=>({
-        name: it.trackName,
-        artists: [{name: it.artistName}],
-        albumImage: it.artworkUrl100 || it.artworkUrl60 || null
-      }));
+      return (data.results||[]).map(it=>([
+        it.trackName,
+        it.artistName,
+        it.artworkUrl100 || it.artworkUrl60 || null
+      ])).map(([name,artist,albumImage])=>({name, artists:[{name:artist}], albumImage}));
     }
 
     async function searchTracks(q){
@@ -401,7 +426,7 @@
 
       tracks.forEach(track=>{
         const card=document.createElement('div');
-        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+        card.className='bg-white/90 rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
         const albumImage = track.albumImage || PLACEHOLDER;
         const artistNames = (track.artists||[]).map(a=>a.name).join(', ');
         card.innerHTML = `
