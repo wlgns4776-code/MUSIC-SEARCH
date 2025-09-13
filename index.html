@@ -2,59 +2,94 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>프로필 선택</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Search</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    html, body { background: transparent !important; background-color: rgba(0,0,0,0) !important; margin:0; }
-    body { font-family: 'Noto Sans KR', sans-serif; }
+    :root{
+      --ply-primary:#A855F7;
+      --ply-secondary:#7C3AED;
+    }
+
+    /* ✅ 전체 배경 투명 */
+    html, body {
+      background: rgba(0,0,0,0) !important;
+      background-color: rgba(0,0,0,0) !important;
+      margin: 0;
+      padding: 0;
+    }
+
+    body{font-family:'Noto Sans KR',sans-serif}
+
+    .card{
+      background:#fff;
+      border-radius:20px;
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
+    }
+
+    #searchResults::-webkit-scrollbar{width:8px}
+    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
+
+    /* Player */
+    #player{
+      display:flex; color:#fff;
+      background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
+      border-radius:1rem;
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
+    }
+    #player.layout-horizontal{flex-direction:row;align-items:center;width:100%;max-width:920px}
+    #player.layout-horizontal .album-art{width:5rem;height:5rem}
+    #player.layout-vertical{flex-direction:column;align-items:center;width:320px}
+    #player.layout-vertical .album-art{width:10rem;height:10rem}
+
+    .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
+
+    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
+    #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+
+    #waveformCanvas{width:120px;height:40px}
+    @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
   </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6">
-  <div class="w-full max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-xl backdrop-blur">
-    <h1 class="text-2xl font-bold text-purple-700 mb-4 text-center">프로필 선택</h1>
 
-    <label class="block text-sm font-medium text-gray-700 mb-1">이름</label>
-    <input id="nameInput" type="text" placeholder="예: 똥두"
-           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+<body class="flex items-center justify-center min-h-screen">
+  <div class="w-full max-w-3xl mx-auto p-4">
 
-    <div class="mt-4 flex gap-2">
-      <button id="enterBtn"
-              class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 active:scale-[.99]">
-        들어가기
-      </button>
-      <button id="clearBtn"
-              class="px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
-        최근 이름 지우기
-      </button>
+    <!-- Player -->
+    <div class="mb-8 flex justify-center">
+      <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
+        <img id="albumArt"
+             src="https://placehold.co/80x80/6d28d9/ffffff?text=Album"
+             alt="Album Art"
+             class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
+
+        <div class="flex-grow min-w-0 ml-4">
+          <h2 class="font-bold text-lg flex flex-wrap items-baseline gap-1 text-glow">
+            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[460px]">노래 제목</span>
+            <span id="trackArtist" class="opacity-90"></span>
+          </h2>
+          <div class="flex items-center text-sm opacity-90 text-glow">
+            <span class="mr-2">SING 🎤</span>
+            <p id="artistName">채널명</p>
+          </div>
+        </div>
+
+        <div class="flex items-center mt-3 md:mt-0">
+          <div class="flex items-center space-x-2 text-2xl">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+          </div>
+          <canvas id="waveformCanvas" class="ml-4"></canvas>
+        </div>
+      </div>
     </div>
 
-    <p class="mt-3 text-xs text-gray-500">
-      이름을 입력하면 저장된 색상/채널명/속도/커버를 불러옵니다.
-    </p>
+    <!-- 검색 / 설정 패널 부분 필요 시 추가 -->
+    <!-- ... 기존 코드 붙이면 됨 -->
   </div>
-
-  <script>
-    const nameInput = document.getElementById('nameInput');
-    const enterBtn  = document.getElementById('enterBtn');
-    const clearBtn  = document.getElementById('clearBtn');
-
-    // ✅ 자동 채움 금지: 저장된 값이 있어도 절대 넣지 않음
-    // (그래도 최근 이름은 유지하고 싶으면 버튼으로만 지우게)
-
-    enterBtn.addEventListener('click', () => {
-      const name = nameInput.value.trim();
-      if (!name) { alert('이름을 입력해 주세요.'); return; }
-      localStorage.setItem('currentProfile', name);
-      location.href = `player.html?name=${encodeURIComponent(name)}`;
-    });
-
-    clearBtn.addEventListener('click', () => {
-      localStorage.removeItem('currentProfile');
-      nameInput.value = '';
-      nameInput.focus();
-    });
-  </script>
 </body>
 </html>
