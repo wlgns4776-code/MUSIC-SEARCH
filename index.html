@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Search</title>
+  <title>Music Search (Overlay)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -12,19 +12,24 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* ✅ 기본: 완전 투명 (방송용) */
-    html, body {
+    /* ✅ 브라우저 소스 최적화: 완전 투명 + 스크롤 제거 + 전체 채움 */
+    html, body{
       margin:0; padding:0;
-      background: rgba(0,0,0,0) !important;
-      background-color: rgba(0,0,0,0) !important;
+      width:100%; height:100%;
+      overflow:hidden;                 /* 스크롤바/여백 제거 */
+      background:transparent !important;
+      background-color:transparent !important;
     }
-    body{font-family:'Noto Sans KR',sans-serif}
+    body{
+      font-family:'Noto Sans KR',sans-serif;
+      display:flex; align-items:center; justify-content:center;  /* 중앙 정렬 */
+    }
 
-    /* 카드(검색 패널 등) — 필요 시 투명/반투명 조절 */
+    /* 카드(검색 패널 등)는 필요 시만 보이게 — 기본 투명 */
     .card{
-      background: rgba(255,255,255,0); /* 완전 투명 (원하면 0.9 등으로 조절) */
+      background: rgba(255,255,255,0);
       border-radius:20px;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
     }
 
     #searchResults::-webkit-scrollbar{width:8px}
@@ -51,11 +56,14 @@
 
     #waveformCanvas{width:120px;height:40px}
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
+
+    /* 전체 폭을 차지하게 하는 래퍼(가운데 카드만 투명 배경 위에 보임) */
+    .container{width:100%; max-width:1100px; padding:16px; box-sizing:border-box;}
   </style>
 </head>
 
-<body class="flex items-center justify-center min-h-screen">
-  <div class="w-full max-w-3xl mx-auto p-4">
+<body>
+  <div class="container">
 
     <!-- Player -->
     <div class="mb-8 flex justify-center">
@@ -105,7 +113,7 @@
     </section>
   </div>
 
-  <!-- 설정 버튼 & 패널 (투명 토글 제거됨) -->
+  <!-- 설정 버튼 & 패널 (투명 토글 없음) -->
   <div class="fixed bottom-6 right-6 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -205,7 +213,6 @@
         playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
       }
       updatePlayerGradient();
-      // 버튼 토글
       if (mode === 'vertical'){
         layoutVerticalBtn.classList.replace('bg-gray-200','bg-purple-500');
         layoutVerticalBtn.classList.replace('text-gray-700','text-white');
