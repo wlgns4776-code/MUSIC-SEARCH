@@ -13,7 +13,7 @@
       --bg-color:#ffffff; /* 배경 기본색 */
     }
 
-    /* ✅ 기본은 불투명 배경. 색상은 --bg-color로 제어 */
+    /* 불투명 배경. 색상은 --bg-color로 제어 */
     html, body { margin:0; padding:0; background:var(--bg-color); }
     body{font-family:'Noto Sans KR',sans-serif}
 
@@ -48,13 +48,13 @@
     #waveformCanvas{width:120px;height:40px}
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
 
-    /* ✅ 추가: 세로형에서 버튼/파형을 위아래로 배치 */
+    /* 세로형에서 버튼/파형을 위아래로 배치 */
     #player.layout-vertical .player-controls{
       display:flex;
-      flex-direction:column;   /* 세로로 쌓기 */
+      flex-direction:column;
       align-items:center;
       width:100%;
-      gap:.5rem;               /* 버튼과 파형 간격 */
+      gap:.5rem;
     }
     /* 세로형에선 파형 좌측 여백 제거 */
     #player.layout-vertical #waveformCanvas{ margin-left:0; }
@@ -83,9 +83,8 @@
           </div>
         </div>
 
-        <!-- ✅ 변경: 컨트롤 래퍼에 player-controls 클래스 추가 -->
+        <!-- 컨트롤 -->
         <div class="player-controls flex items-center mt-3 md:mt-0">
-          <!-- ✅ 변경: 버튼 묶음에 player-buttons 클래스 추가 -->
           <div class="player-buttons flex items-center space-x-2 text-2xl">
             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
@@ -216,8 +215,12 @@
     const applyBg = document.getElementById('applyBg');
     const resetBg = document.getElementById('resetBg');
 
-    const PLACEHOLDER = albumArtImg.src; // 인라인 SVG
-    let originalAlbumArtUrl = PLACEHOLDER;
+    const PLACEHOLDER = albumArtImg.src; // 기본 SVG
+    let originalAlbumArtUrl = PLACEHOLDER; // 현재 곡의 기본 썸네일(트랙 선택 시 갱신)
+
+    // ✅ 업로드 커버 고정 로직
+    let userCoverUrl = null;   // 사용자가 올린 커버 dataURL
+    let useUserCover = false;  // 업로드 커버 고정 여부
 
     /* -------------------- Helpers -------------------- */
     function setCssVar(name, value){ document.documentElement.style.setProperty(name, value); }
@@ -247,13 +250,24 @@
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
     applyDisplayName.addEventListener('click', ()=>{ const v=displayNameInput.value.trim(); if(v) artistNameP.textContent=v; });
 
+    // ✅ 이미지 업로드: 업로드하면 고정 모드로 전환
     imageUpload.addEventListener('change', e=>{
       const f=e.target.files[0]; if(!f) return;
       const r=new FileReader();
-      r.onload=ev=>{ albumArtImg.src=ev.target.result; };
+      r.onload=ev=>{
+        userCoverUrl = ev.target.result;
+        useUserCover = true;            // 업로드 커버 고정
+        albumArtImg.src = userCoverUrl; // 즉시 반영
+      };
       r.readAsDataURL(f);
     });
-    revertCover.addEventListener('click', ()=>{ albumArtImg.src=originalAlbumArtUrl || PLACEHOLDER; });
+
+    // ✅ 원래 썸네일: 고정 해제 + 현재 곡 썸네일로 복귀 (이후 노래 바꾸면 트랙 썸네일 사용)
+    revertCover.addEventListener('click', ()=>{
+      useUserCover = false;
+      userCoverUrl = null;
+      albumArtImg.src = originalAlbumArtUrl || PLACEHOLDER;
+    });
 
     applyColors.addEventListener('click', updatePlayerGradient);
     resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
@@ -398,8 +412,10 @@
             <p class="text-xs text-gray-600 truncate">${artistNames}</p>
           </div>`;
         card.addEventListener('click', ()=>{
-          originalAlbumArtUrl = albumImage;
-          albumArtImg.src = albumImage;
+          originalAlbumArtUrl = albumImage;          // 현재 트랙 기본 썸네일 갱신
+          if (!useUserCover) {                       // 업로드 커버를 사용 중이 아닐 때만 교체
+            albumArtImg.src = albumImage;
+          }
           trackTitleSpan.textContent = track.name || '노래 제목';
           trackArtistSpan.textContent = artistNames ? `- ${artistNames}` : '';
         });
@@ -432,7 +448,7 @@
     /* -------------------- Init -------------------- */
     updatePlayerGradient();
     applyBgColor(bgColor.value);  // 배경 기본 적용
-    (function setLayoutInit(){ setLayout('horizontal'); })();
+    setLayout('horizontal');      // 기본 레이아웃
     (function applySpeedInit(){ const v=parseFloat(speedInput.value||"1"); speedVal.textContent=v.toFixed(2)+"x"; })();
   </script>
 </body>
