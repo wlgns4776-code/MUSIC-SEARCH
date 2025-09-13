@@ -78,7 +78,6 @@
     </button>
 
     <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
-      <!-- 프로필 표시/저장불러오기 -->
       <div class="text-sm text-gray-600">프로필: <span id="profileLabel">-</span></div>
 
       <!-- 표시 채널명 -->
@@ -210,7 +209,7 @@
       function roundRect(ctx,x,y,w,h,r){
         const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
         ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
-        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
         ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
         ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
       }
@@ -366,8 +365,8 @@
        ⚠️ 프런트에 client_secret 넣는 건 위험!
        임시 테스트 외엔 서버 프록시 권장
     ========================== */
-    const CLIENT_ID = "YOUR_SPOTIFY_CLIENT_ID";
-    const CLIENT_SECRET = "YOUR_SPOTIFY_CLIENT_SECRET"; // ⚠️ 프론트 보관 금지(테스트 외 금지)
+    const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
+    const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb"; // ⚠️ 프론트 보관 금지(테스트 외 금지)
     let accessToken = null;
 
     async function getAccessToken(){
