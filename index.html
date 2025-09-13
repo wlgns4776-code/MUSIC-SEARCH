@@ -12,7 +12,7 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* ✅ 기본 투명 (프릭샷/OBS용) — 미리보기는 ?white=1 로 흰 배경 전환 */
+    /* ✅ 기본: 완전 투명 (방송용) */
     html, body {
       margin:0; padding:0;
       background: rgba(0,0,0,0) !important;
@@ -20,20 +20,11 @@
     }
     body{font-family:'Noto Sans KR',sans-serif}
 
-    /* 카드(검색 패널 등)도 기본 투명 */
+    /* 카드(검색 패널 등) — 필요 시 투명/반투명 조절 */
     .card{
-      background: rgba(255,255,255,0);
+      background: rgba(255,255,255,0); /* 완전 투명 (원하면 0.9 등으로 조절) */
       border-radius:20px;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
-    }
-
-    /* 🔁 미리보기용 강제 흰 배경 모드: ?white=1 또는 토글 해제 시 */
-    .preview-white, .preview-white body{
-      background:#ffffff !important;
-      background-color:#ffffff !important;
-    }
-    .preview-white .card{
-      background:#ffffff !important;
     }
 
     #searchResults::-webkit-scrollbar{width:8px}
@@ -114,7 +105,7 @@
     </section>
   </div>
 
-  <!-- 설정 버튼 & 패널 -->
+  <!-- 설정 버튼 & 패널 (투명 토글 제거됨) -->
   <div class="fixed bottom-6 right-6 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -143,7 +134,7 @@
         </div>
       </div>
 
-      <!-- 카드 색상 -->
+      <!-- 카드 색상 (플레이어 그라데이션용) -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 색상</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
@@ -169,45 +160,10 @@
         <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
         <div class="flex justify-between text-xs text-gray-500"><span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span></div>
       </div>
-
-      <!-- 투명 배경 -->
-      <div class="pt-2 border-t">
-        <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-          <input id="transparentToggle" type="checkbox" class="h-4 w-4">
-          투명 배경 사용 (OBS/프릭샷)
-        </label>
-      </div>
     </div>
   </div>
 
   <script>
-    /* ---------- 임베드/미리보기 배경 모드 결정 ---------- */
-    (function(){
-      const qs = new URLSearchParams(location.search);
-      const wantTransparent = qs.get('transparent') === '1';
-      const wantWhite = qs.get('white') === '1'; // 미리보기 강제 흰 배경
-      const ua = navigator.userAgent;
-      // 주요 방송/캡처 앱 UA 포함
-      const looksLikeCaptureApp = /obs|frik|frikshot|prism|prismlive|xsplit|streamlabs|slobs/i.test(ua);
-
-      // 흰 배경 우선 (미리보기)
-      if (wantWhite) {
-        document.documentElement.classList.add('preview-white');
-        document.body.classList.add('preview-white');
-        return;
-      }
-
-      // 투명 모드: 기본(캡처앱 감지) 또는 ?transparent=1
-      if (wantTransparent || looksLikeCaptureApp) {
-        // 이미 CSS 기본이 투명 — 토글 UI만 동기화
-        setTimeout(()=>{ const el=document.getElementById('transparentToggle'); if(el) el.checked=true; }, 0);
-      } else {
-        // 일반 브라우저 접근 시는 흰 배경 미리보기
-        document.documentElement.classList.add('preview-white');
-        document.body.classList.add('preview-white');
-      }
-    })();
-
     /* -------------------- DOM -------------------- */
     const playerDiv = document.getElementById('player');
     const albumArtImg = document.getElementById('albumArt');
@@ -235,7 +191,6 @@
     const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
     const speedInput = document.getElementById('speedInput');
     const speedVal = document.getElementById('speedVal');
-    const transparentToggle = document.getElementById('transparentToggle');
 
     const PLACEHOLDER = albumArtImg.src;
     let originalAlbumArtUrl = PLACEHOLDER;
@@ -281,18 +236,6 @@
 
     layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
     layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
-
-    /* 🔁 투명 토글: 해제 시 미리보기(흰 배경) 모드로 전환 */
-    transparentToggle.addEventListener('change', (e)=>{
-      const on = e.target.checked;
-      if (on){
-        document.documentElement.classList.remove('preview-white');
-        document.body.classList.remove('preview-white');
-      } else {
-        document.documentElement.classList.add('preview-white');
-        document.body.classList.add('preview-white');
-      }
-    });
 
     /* -------------------- Waveform animation -------------------- */
     function initWaveform(canvas, options = {}) {
