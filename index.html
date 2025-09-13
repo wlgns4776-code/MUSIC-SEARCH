@@ -13,7 +13,7 @@
       --bg-color:#ffffff; /* 배경 기본색 */
     }
 
-    /* ✅ 이제 기본은 ‘불투명’ 배경. 색상은 --bg-color로 제어 */
+    /* ✅ 기본은 불투명 배경. 색상은 --bg-color로 제어 */
     html, body { margin:0; padding:0; background:var(--bg-color); }
     body{font-family:'Noto Sans KR',sans-serif}
 
@@ -47,6 +47,17 @@
 
     #waveformCanvas{width:120px;height:40px}
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
+
+    /* ✅ 추가: 세로형에서 버튼/파형을 위아래로 배치 */
+    #player.layout-vertical .player-controls{
+      display:flex;
+      flex-direction:column;   /* 세로로 쌓기 */
+      align-items:center;
+      width:100%;
+      gap:.5rem;               /* 버튼과 파형 간격 */
+    }
+    /* 세로형에선 파형 좌측 여백 제거 */
+    #player.layout-vertical #waveformCanvas{ margin-left:0; }
   </style>
 </head>
 
@@ -72,8 +83,10 @@
           </div>
         </div>
 
-        <div class="flex items-center mt-3 md:mt-0">
-          <div class="flex items-center space-x-2 text-2xl">
+        <!-- ✅ 변경: 컨트롤 래퍼에 player-controls 클래스 추가 -->
+        <div class="player-controls flex items-center mt-3 md:mt-0">
+          <!-- ✅ 변경: 버튼 묶음에 player-buttons 클래스 추가 -->
+          <div class="player-buttons flex items-center space-x-2 text-2xl">
             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
             <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
@@ -141,7 +154,7 @@
         </div>
       </div>
 
-      <!-- 🔵 배경 색상 (신규) -->
+      <!-- 배경 색상 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">배경 색상</label>
         <div class="mt-2 flex items-center gap-2">
@@ -198,7 +211,7 @@
     const speedInput = document.getElementById('speedInput');
     const speedVal = document.getElementById('speedVal');
 
-    // 신규: 배경 색상 컨트롤
+    // 배경 색상 컨트롤
     const bgColor = document.getElementById('bgColor');
     const applyBg = document.getElementById('applyBg');
     const resetBg = document.getElementById('resetBg');
@@ -284,8 +297,8 @@
           const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
           const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
           const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
-          targetHeights[i]=H*ratio;
-          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+          const target=H*ratio;
+          const h=prevHeights[i]+(target-prevHeights[i])*cfg.smoothing;
           prevHeights[i]=h;
           const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
           roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
