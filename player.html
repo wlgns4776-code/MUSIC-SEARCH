@@ -2,215 +2,340 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>뮤직 플레이어</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Search</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    html, body { background: transparent; margin:0; }
-    body { font-family: 'Noto Sans KR', sans-serif; }
-    .player.layout-horizontal{display:flex;flex-direction:row;align-items:center;width:100%}
+    body{font-family:'Noto Sans KR',sans-serif;background:transparent;margin:0;}
+    .card{background:#fff;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)}
+    /* 결과 스크롤 */
+    #searchResults::-webkit-scrollbar{width:8px}
+    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
+    /* 플레이어 레이아웃 */
+    .player.layout-horizontal{flex-direction:row;align-items:center;width:100%}
     .player.layout-horizontal .album-art{width:5rem;height:5rem}
-    .glow{filter: drop-shadow(0 6px 16px rgba(0,0,0,.18))}
+    .player.layout-vertical{flex-direction:column;align-items:center;width:288px}
+    .player.layout-vertical .album-art{width:10rem;height:10rem}
+    /* 설정 패널 */
+    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
+    #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
   </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-6">
-  <!-- 카드 -->
-  <div id="card" class="w-full max-w-xl p-6 rounded-2xl shadow-xl glow"
-       style="background: linear-gradient(90deg,#A855F7,#7C3AED);">
+<body class="flex items-center justify-center min-h-screen">
 
-    <div class="flex items-center justify-between mb-4">
-      <div class="text-white/90 text-sm">프로필: <span id="profileLabel"></span></div>
-      <a href="index.html" class="text-white/80 underline">프로필 변경</a>
+  <div class="w-full max-w-3xl mx-auto p-4">
+
+    <!-- Player -->
+    <div class="mb-8 flex justify-center">
+      <div id="player" class="player flex p-4 rounded-2xl shadow-lg text-white transition-all duration-500 ease-in-out transform layout-horizontal"
+           style="background:linear-gradient(90deg,#A855F7,#7C3AED)">
+        <img id="albumArt" src="https://placehold.co/80x80/6d28d9/ffffff?text=Album" alt="Album Art" class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
+        <div class="flex-grow min-w-0 ml-4">
+          <h2 class="font-bold text-lg flex min-w-0 items-baseline">
+            <span id="trackTitle" class="truncate">노래 제목</span>
+            <span id="trackArtist" class="ml-2 flex-shrink-0"></span>
+          </h2>
+          <div class="flex items-center text-sm opacity-80">
+            <span class="mr-2">SING 🎤</span>
+            <p id="artistName">채널명</p>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <canvas id="waveformCanvas" width="120" height="40" class="ml-4"></canvas>
+        </div>
+      </div>
     </div>
 
-    <div class="player layout-horizontal text-white">
-      <img id="coverImg" alt="cover"
-           class="album-art rounded-lg object-cover shadow"
-           src="https://placehold.co/120x120/6d28d9/ffffff?text=Cover">
-      <div class="ml-4 min-w-0">
-        <h2 class="font-bold text-lg truncate" id="trackTitle">노래 제목</h2>
-        <div class="text-sm opacity-85"><span>SING 🎤</span> <span id="artistDisp" class="ml-2"></span></div>
-      </div>
-      <canvas id="waveformCanvas" width="140" height="44" class="ml-auto"></canvas>
-    </div>
+    <header class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-purple-800">Music search</h1>
+    </header>
 
-    <div class="mt-6 grid grid-cols-1 gap-4">
-      <!-- 채널명 -->
+    <!-- Search -->
+    <section class="card p-4 mb-6">
+      <div class="flex w-full items-center gap-2">
+        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
+               class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+        <button id="searchButton"
+                class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">
+          검색
+        </button>
+      </div>
+    </section>
+
+    <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
+    <section>
+      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
+    </section>
+  </div>
+
+  <!-- Settings -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </button>
+
+    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
+      <!-- 프로필 표시/저장불러오기 -->
+      <div class="text-sm text-gray-600">프로필: <span id="profileLabel">-</span></div>
+
+      <!-- 표시 채널명 -->
       <div>
-        <label class="block text-sm text-white/90 mb-1">표시 채널명</label>
-        <input id="channelInput" type="text" placeholder="예: SING"
-               class="w-full px-3 py-2 rounded border border-gray-300">
+        <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
+        <div class="mt-1 flex items-center gap-2">
+          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
+                 class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+        </div>
       </div>
 
-      <!-- 색상 -->
+      <!-- 커버 이미지 -->
       <div>
-        <label class="block text-sm text-white/90 mb-1">카드 색상</label>
-        <div class="flex gap-2">
-          <input id="primaryColor"   type="color" value="#A855F7" class="w-1/2 h-10">
-          <input id="secondaryColor" type="color" value="#7C3AED" class="w-1/2 h-10">
+        <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <label class="cursor-pointer h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
+            <span>이미지 업로드</span>
+            <input id="imageUpload" type="file" class="hidden" accept="image/*">
+          </label>
+          <button id="revertCover" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+        </div>
+      </div>
+
+      <!-- 카드 색상 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 색상</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+        </div>
+      </div>
+
+      <!-- 레이아웃 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
+        <div class="mt-2 flex flex-row items-center gap-2">
+          <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
+          <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
         </div>
       </div>
 
       <!-- 파형 속도 -->
       <div>
-        <label class="block text-sm text-white/90 mb-1">파형 속도</label>
+        <label class="block text-sm font-medium text-gray-700">파형 속도</label>
         <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
-        <div class="flex justify-between text-xs text-white/75 mt-1">
-          <span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span>
-        </div>
+        <div class="flex justify-between text-xs text-gray-500"><span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span></div>
       </div>
 
-      <!-- 커버 업로드 -->
-      <div>
-        <label class="block text-sm text-white/90 mb-1">커버 이미지</label>
-        <div class="flex gap-2 items-center">
-          <input id="coverFile" type="file" accept="image/*"
-                 class="block w-full text-sm text-white/90 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-white file:text-purple-700 file:font-medium file:cursor-pointer" />
-          <button id="revertCover" class="px-3 py-1 rounded bg-white/85 text-purple-700 text-sm">기본 커버</button>
-        </div>
+      <!-- 저장/불러오기 -->
+      <div class="flex gap-2">
+        <button id="saveProfile" class="flex-1 h-10 px-4 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700">저장</button>
+        <button id="loadProfile" class="flex-1 h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">불러오기</button>
       </div>
-    </div>
-
-    <div class="mt-5 flex gap-2">
-      <button id="saveBtn" class="flex-1 bg-white text-purple-700 py-2 rounded-lg hover:bg-gray-100">저장</button>
-      <button id="reloadBtn" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">다시 불러오기</button>
     </div>
   </div>
 
-  <!-- Supabase SDK -->
+  <!-- Supabase & App Script -->
   <script type="module">
+    /* =========================
+       Supabase 연결
+    ========================== */
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
-    // === Supabase 연결 ===
     const SUPABASE_URL = "https://tasppztkvrjwxkkdjfvj.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhc3BwenRrdnJqd3hra2RqZnZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NjIwNzksImV4cCI6MjA3MjIzODA3OX0.3Wi4BH_OZSE3GPEEM3Cbb0mQWzRUKWaG4Zyk97n3TNo";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const STORAGE_BUCKET = "covers";
+    const PLACEHOLDER = "https://placehold.co/120x120/6d28d9/ffffff?text=Cover";
 
-    // === DOM ===
-    const profileLabel   = document.getElementById('profileLabel');
-    const card           = document.getElementById('card');
-    const coverImg       = document.getElementById('coverImg');
-    const trackTitle     = document.getElementById('trackTitle');
-    const artistDisp     = document.getElementById('artistDisp');
-    const coverFile      = document.getElementById('coverFile');
-    const revertCover    = document.getElementById('revertCover');
-    const channelInput   = document.getElementById('channelInput');
-    const primaryColor   = document.getElementById('primaryColor');
+    /* =========================
+       DOM 참조
+    ========================== */
+    const playerDiv = document.getElementById('player');
+    const albumArtImg = document.getElementById('albumArt');
+    const trackTitleSpan = document.getElementById('trackTitle');
+    const trackArtistSpan = document.getElementById('trackArtist');
+    const artistNameP = document.getElementById('artistName');
+    const waveformCanvas = document.getElementById('waveformCanvas');
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const statusDiv = document.getElementById('status');
+    const searchResultsContainer = document.getElementById('searchResults');
+
+    const settingsIconBtn = document.getElementById('settingsIconBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const displayNameInput = document.getElementById('displayNameInput');
+    const applyDisplayName = document.getElementById('applyDisplayName');
+    const imageUpload = document.getElementById('imageUpload');
+    const revertCover = document.getElementById('revertCover');
+    const primaryColor = document.getElementById('primaryColor');
     const secondaryColor = document.getElementById('secondaryColor');
-    const speedInput     = document.getElementById('speedInput');
-    const speedVal       = document.getElementById('speedVal');
-    const saveBtn        = document.getElementById('saveBtn');
-    const reloadBtn      = document.getElementById('reloadBtn');
-    const PLACEHOLDER    = "https://placehold.co/120x120/6d28d9/ffffff?text=Cover";
+    const applyColors = document.getElementById('applyColors');
+    const resetColors = document.getElementById('resetColors');
+    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+    const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+    const speedInput = document.getElementById('speedInput');
+    const speedVal = document.getElementById('speedVal');
+    const saveProfileBtn = document.getElementById('saveProfile');
+    const loadProfileBtn = document.getElementById('loadProfile');
+    const profileLabel = document.getElementById('profileLabel');
 
-    // === 프로필 이름 ===
+    /* =========================
+       프로필 이름
+    ========================== */
     const params = new URLSearchParams(location.search);
-    const profileName = (params.get('name') || localStorage.getItem('currentProfile') || '').trim();
-    if (!profileName) location.replace('index.html');
+    const profileName = (params.get('name') || localStorage.getItem('currentProfile') || "").trim();
+    if (!profileName) { location.replace('index.html'); }
     profileLabel.textContent = profileName;
     localStorage.setItem('currentProfile', profileName);
 
-    // === 카드 그라데이션 & 파형 ===
-    function updateGradient() {
-      card.style.background = `linear-gradient(90deg, ${primaryColor.value}, ${secondaryColor.value})`;
-    }
-    primaryColor.addEventListener('input', updateGradient);
-    secondaryColor.addEventListener('input', updateGradient);
-
-    // 파형(캔버스) 부드러운 애니메이션
-    const canvas = document.getElementById('waveformCanvas');
-    const ctx = canvas.getContext('2d');
-    const cfg = { barCount: 18, gap: 3, smoothing: 0.08, baseHz: 0.6, rippleHz: 1.2, minR: 0.25, maxR: 0.85 };
-    let prevHeights = new Array(cfg.barCount).fill(0);
-
-    function render(ts) {
-      const t = ts/1000;
-      const W = canvas.width/1, H = canvas.height/1;
-      ctx.clearRect(0,0,W,H);
-      const barW = Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
-      for(let i=0;i<cfg.barCount;i++){
-        const base = 0.5*(1-Math.cos(Math.PI*2*(t*cfg.baseHz + i*0.18)));
-        const rip  = 0.5*(1-Math.cos(Math.PI*2*(t*cfg.rippleHz + i*0.35)));
-        const mix  = 0.75*base + 0.25*rip;
-        const ratio = cfg.minR + (cfg.maxR-cfg.minR)*mix;
-        const target = H*ratio;
-        const h = prevHeights[i] + (target - prevHeights[i]) * cfg.smoothing;
-        prevHeights[i] = h;
-        const x = i*(barW+cfg.gap), y = H-h;
-        roundRect(ctx,x,y,barW,h,Math.min(3,barW*0.35));
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        ctx.shadowBlur = 6; ctx.shadowColor='rgba(255,255,255,0.35)';
-        ctx.fill();
-        ctx.shadowBlur = 0;
+    /* =========================
+       파형 애니메이션
+    ========================== */
+    function initWaveform(canvas, options = {}) {
+      if (!canvas) return;
+      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const ctx = canvas.getContext('2d');
+      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
+      let lastW=0,lastH=0, startedAt=null;
+      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
+      function resizeIfNeeded(){
+        const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40;
+        if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+      }
+      function roundRect(ctx,x,y,w,h,r){
+        const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
+        ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+        ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+        ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
+      }
+      function render(ts){
+        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
+        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
+        ctx.clearRect(0,0,W,H);
+        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+        ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
+        for(let i=0;i<cfg.barCount;i++){
+          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
+          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+          const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
+          const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+          targetHeights[i]=H*ratio;
+          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+          prevHeights[i]=h;
+          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
+          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+        }
+        ctx.shadowBlur=0; ctx.shadowColor='transparent';
+        requestAnimationFrame(render);
       }
       requestAnimationFrame(render);
-    }
-    function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
-    requestAnimationFrame(render);
-
-    // 속도 슬라이더 → 파형 속도 반영
-    function applySpeed() {
-      const v = parseFloat(speedInput.value || '1');
-      speedVal.textContent = v.toFixed(2)+'x';
-      cfg.baseHz   = 0.6 * v;
-      cfg.rippleHz = 1.2 * v;
-    }
-    speedInput.addEventListener('input', applySpeed);
-
-    // === Supabase: 불러오기 ===
-    async function loadProfile() {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('settings')
-        .eq('name', profileName)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        alert('불러오기 오류: ' + error.message);
-        return;
-      }
-
-      const s = data?.settings || {
-        channel: '',
-        primary: '#A855F7',
-        secondary: '#7C3AED',
-        speed: 1,
-        coverUrl: ''
+      window.addEventListener('resize', resizeIfNeeded);
+      return {
+        setSpeed(mult){
+          mult=Math.max(0.1, Math.min(5, mult||1));
+          cfg.baseSpeedHz = 0.6 * mult;
+          cfg.rippleSpeedHz = 1.2 * mult;
+        }
       };
+    }
+    const waveform = initWaveform(waveformCanvas);
+    function applySpeedUI(){
+      const v = parseFloat(speedInput.value || "1");
+      speedVal.textContent = v.toFixed(2)+"x";
+      waveform?.setSpeed(v);
+    }
+    speedInput.addEventListener('input', applySpeedUI);
 
-      channelInput.value   = s.channel || '';
-      primaryColor.value   = s.primary || '#A855F7';
-      secondaryColor.value = s.secondary || '#7C3AED';
-      speedInput.value     = s.speed ?? 1;
-      applySpeed();
-      updateGradient();
+    /* =========================
+       UI 핸들러들
+    ========================== */
+    const updatePlayerGradient = () => {
+      const direction = playerDiv.classList.contains('layout-vertical') ? '180deg' : '90deg';
+      playerDiv.style.background = `linear-gradient(${direction}, ${primaryColor.value}, ${secondaryColor.value})`;
+    };
+    const setLayout = (mode) => {
+      if(mode==='vertical'){
+        playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
+      }else{
+        playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
+      }
+      updatePlayerGradient();
+    };
 
-      if (s.coverUrl) coverImg.src = s.coverUrl;
-      artistDisp.textContent = s.channel || '';
-      trackTitle.textContent = '노래 제목';
+    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+    applyDisplayName.addEventListener('click', ()=> { artistNameP.textContent = displayNameInput.value.trim(); });
+    imageUpload.addEventListener('change', e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ albumArtImg.src=ev.target.result; };
+      r.readAsDataURL(f);
+    });
+    revertCover.addEventListener('click', ()=>{ albumArtImg.src=PLACEHOLDER; });
+    applyColors.addEventListener('click', updatePlayerGradient);
+    resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
+    layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
+    layoutVerticalBtn.addEventListener('click',   ()=> setLayout('vertical'));
+
+    /* =========================
+       Supabase 저장/불러오기
+       profiles(name unique), settings JSON에 보관
+       { channel, primary, secondary, layout, speed, coverUrl }
+    ========================== */
+    async function loadProfile(){
+      try{
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('settings')
+          .eq('name', profileName)
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+
+        const s = data?.settings || {
+          channel:'', primary:'#A855F7', secondary:'#7C3AED',
+          layout:'horizontal', speed:1, coverUrl:''
+        };
+
+        // 적용
+        displayNameInput.value = s.channel || '';
+        artistNameP.textContent = s.channel || '채널명';
+        primaryColor.value = s.primary || '#A855F7';
+        secondaryColor.value = s.secondary || '#7C3AED';
+        setLayout(s.layout==='vertical' ? 'vertical' : 'horizontal');
+        speedInput.value = s.speed ?? 1; applySpeedUI();
+        if (s.coverUrl) albumArtImg.src = s.coverUrl; else albumArtImg.src = PLACEHOLDER;
+        updatePlayerGradient();
+      }catch(e){
+        console.error(e);
+        alert('프로필 불러오기 오류: ' + (e?.message || e));
+      }
     }
 
-    // === Supabase: 저장(업서트) ===
-    async function saveProfile() {
-      try {
-        let coverUrl = (coverImg.src && coverImg.src !== PLACEHOLDER) ? coverImg.src : '';
-
-        // 새 파일 선택 시 업로드
-        if (coverFile.files.length > 0) {
-          const file = coverFile.files[0];
+    async function saveProfile(){
+      try{
+        // 새 파일 업로드가 선택된 경우 Storage에 업로드
+        let coverUrl = (albumArtImg.src && !albumArtImg.src.includes('placehold.co')) ? albumArtImg.src : '';
+        const file = imageUpload.files?.[0];
+        if (file){
           const path = `uploads/${profileName}/${Date.now()}_${file.name}`;
-          const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true });
+          const { error: upErr } = await supabase.storage.from(STORAGE_BUCKET).upload(path, file, { upsert:true });
           if (upErr) throw upErr;
-          coverUrl = supabase.storage.from('covers').getPublicUrl(path).data.publicUrl;
-          coverImg.src = coverUrl;
+          coverUrl = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+          albumArtImg.src = coverUrl;
         }
 
         const settings = {
-          channel:   channelInput.value.trim(),
-          primary:   primaryColor.value,
+          channel: displayNameInput.value.trim(),
+          primary: primaryColor.value,
           secondary: secondaryColor.value,
-          speed:     parseFloat(speedInput.value),
+          layout: playerDiv.classList.contains('layout-vertical') ? 'vertical' : 'horizontal',
+          speed: parseFloat(speedInput.value || '1'),
           coverUrl
         };
 
@@ -220,22 +345,110 @@
 
         if (error) throw error;
         alert('저장 완료!');
-      } catch (e) {
+      }catch(e){
         console.error(e);
         alert('저장 중 오류: ' + (e?.message || e));
       }
     }
 
-    function setDefaultCover(){ coverImg.src = PLACEHOLDER; }
+    saveProfileBtn.addEventListener('click', saveProfile);
+    loadProfileBtn.addEventListener('click', loadProfile);
 
-    revertCover.addEventListener('click', setDefaultCover);
-    saveBtn.addEventListener('click', saveProfile);
-    reloadBtn.addEventListener('click', loadProfile);
-
-    // 초기 로드
-    updateGradient();
-    applySpeed();
+    /* =========================
+       초기 로드
+    ========================== */
+    updatePlayerGradient();
+    applySpeedUI();
     loadProfile();
+
+    /* =========================
+       (선택) Spotify 검색
+       ⚠️ 프런트에 client_secret 넣는 건 위험!
+       임시 테스트 외엔 서버 프록시 권장
+    ========================== */
+    const CLIENT_ID = "YOUR_SPOTIFY_CLIENT_ID";
+    const CLIENT_SECRET = "YOUR_SPOTIFY_CLIENT_SECRET"; // ⚠️ 프론트 보관 금지(테스트 외 금지)
+    let accessToken = null;
+
+    async function getAccessToken(){
+      if (!CLIENT_ID || !CLIENT_SECRET || CLIENT_ID.includes('YOUR_')) {
+        statusDiv.textContent = "Spotify API 키를 설정해주세요.";
+        return null;
+      }
+      try{
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/x-www-form-urlencoded',
+            'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET)
+          },
+          body:'grant_type=client_credentials'
+        });
+        if(!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        return data.access_token;
+      }catch(e){
+        console.error(e); statusDiv.textContent="API 토큰 인증 실패"; return null;
+      }
+    }
+
+    async function searchTracks(q){
+      if(!q) return;
+      if(!accessToken){ statusDiv.textContent="인증 중..."; accessToken = await getAccessToken(); if(!accessToken) return; }
+      statusDiv.textContent="검색 중...";
+      try{
+        const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20`,{
+          headers:{'Authorization':`Bearer ${accessToken}`}
+        });
+        if(!res.ok){
+          if(res.status===401){ accessToken = await getAccessToken(); if(accessToken) searchTracks(q); return; }
+          throw new Error(res.statusText);
+        }
+        const data = await res.json();
+        displayResults(data.tracks.items);
+      }catch(e){ console.error(e); statusDiv.textContent="검색 중 오류"; }
+    }
+
+    function displayResults(tracks){
+      searchResultsContainer.innerHTML='';
+      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; searchResultsContainer.classList.add('hidden'); return; }
+      statusDiv.textContent=''; searchResultsContainer.classList.remove('hidden');
+      tracks.forEach(track=>{
+        const card=document.createElement('div');
+        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+        const albumImage = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/300x300/e9d5ff/a855f7?text=?';
+        const artistNames = track.artists.map(a=>a.name).join(', ');
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${albumImage}" alt="${track.album.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
+          </div>
+          <div class="mt-2 text-center">
+            <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
+            <p class="text-xs text-gray-600 truncate">${artistNames}</p>
+          </div>`;
+        card.addEventListener('click', ()=> updatePlayerUI(track));
+        searchResultsContainer.appendChild(card);
+      });
+    }
+
+    function updatePlayerUI(track){
+      const imageUrl = track.album.images[1] ? track.album.images[1].url : PLACEHOLDER;
+      const artistNames = track.artists.map(a=>a.name).join(', ');
+      albumArtImg.src = imageUrl;
+      trackTitleSpan.textContent = track.name;
+      trackArtistSpan.textContent = `- ${artistNames}`;
+    }
+
+    // 검색 이벤트
+    const performSearch = ()=> {
+      const q = searchInput.value.trim();
+      if(!q){ statusDiv.textContent=''; searchResultsContainer.classList.add('hidden'); searchResultsContainer.innerHTML=''; return; }
+      searchTracks(q);
+    };
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
+    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; searchResultsContainer.classList.add('hidden'); searchResultsContainer.innerHTML=''; } });
+
   </script>
 </body>
 </html>
