@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    html, body { background: transparent; margin:0; }
+    html, body { background: transparent !important; background-color: rgba(0,0,0,0) !important; margin:0; }
     body { font-family: 'Noto Sans KR', sans-serif; }
   </style>
 </head>
@@ -35,14 +35,14 @@
     </p>
   </div>
 
-  <script type="module">
+  <script>
     const nameInput = document.getElementById('nameInput');
     const enterBtn  = document.getElementById('enterBtn');
     const clearBtn  = document.getElementById('clearBtn');
 
-    // 최근 이름 자동 채우기 (없으면 '똥두' 기본값)
+    // 최근 이름이 있을 때만 채움 (없으면 비워둠)
     const last = localStorage.getItem('currentProfile');
-    nameInput.value = last ? last : '똥두';
+    if (last) nameInput.value = last;
 
     enterBtn.addEventListener('click', () => {
       const name = nameInput.value.trim();
@@ -53,7 +53,7 @@
 
     clearBtn.addEventListener('click', () => {
       localStorage.removeItem('currentProfile');
-      nameInput.value = '똥두';
+      nameInput.value = '';
       nameInput.focus();
     });
   </script>
