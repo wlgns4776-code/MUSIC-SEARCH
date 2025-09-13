@@ -12,20 +12,16 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* 완전 투명 + 가운데 정렬 + 스크롤 제거 */
+    /* ✅ 기본: 완전 투명 (방송용) */
     html, body{
-      margin:0; padding:0;
-      width:100%; height:100%;
-      overflow:hidden;
+      margin:0; padding:0; width:100%; height:100%;
       background:transparent !important;
       background-color:transparent !important;
+      overflow:hidden;
     }
-    body{
-      font-family:'Noto Sans KR',sans-serif;
-      display:flex; align-items:center; justify-content:center;
-    }
+    body{font-family:'Noto Sans KR',sans-serif; display:flex; align-items:center; justify-content:center;}
 
-    .wrap{ width:100%; max-width:560px; padding:16px; box-sizing:border-box; }
+    .wrap{ width:100%; max-width:860px; padding:16px; box-sizing:border-box; }
 
     /* 카드(검색 패널 등) */
     .card{
@@ -34,43 +30,49 @@
       box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
     }
 
-    /* Player — 컴팩트 사이즈 */
+    /* ───────── Player ───────── */
     #player{
       display:flex; color:#fff;
       background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
-      border-radius:14px;
-      padding:12px;
+      border-radius:16px;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
+      transition:all .3s ease;
     }
 
-    /* 가로형 */
+    /* 🎵 가로형 (요청 사이즈) */
     #player.layout-horizontal{
       flex-direction:row; align-items:center;
-      width:100%; max-width:520px;
+      width:100%; max-width:720px;
+      padding:14px 20px;
     }
-    #player.layout-horizontal .album-art{ width:56px; height:56px; }
+    #player.layout-horizontal .album-art{ width:72px; height:72px; }
     #player.layout-horizontal .title-area{ text-align:left; }
     #player.layout-horizontal .right-area{ margin-top:.25rem; }
 
-    /* 세로형 */
+    /* 🎵 세로형 (요청 사이즈) */
     #player.layout-vertical{
       flex-direction:column; align-items:center;
-      width:320px;
+      width:280px;
+      padding:18px 16px;
     }
-    #player.layout-vertical .album-art{ width:96px; height:96px; margin-bottom:.5rem; }
+    #player.layout-vertical .album-art{ width:120px; height:120px; margin-bottom:.5rem; }
     #player.layout-vertical .title-area{ text-align:center; }
     #player.layout-vertical .right-area{ margin-top:.5rem; }
 
+    /* 공통 */
+    .album-art{ border-radius:12px; flex-shrink:0; object-fit:cover; }
     .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
 
-    #waveformCanvas{ width:96px; height:32px }
-    @media (min-width:768px){ #waveformCanvas{ width:110px; height:36px } }
+    /* 파형 (가로형 기준, 세로형도 잘 맞음) */
+    #waveformCanvas{ width:120px; height:40px }
+    @media (min-width:768px){ #waveformCanvas{ width:140px; height:44px } }
 
+    /* 검색 UI 폭도 플레이어에 맞춤 */
+    .search-wrap{ max-width:720px; margin:0 auto; }
+
+    /* 설정 패널 트랜지션 */
     #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
     #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
-
-    /* 검색 카드도 폭 맞춤 */
-    .search-wrap{ max-width:520px; margin:0 auto; }
 
     /* 결과 스크롤바 */
     #searchResults::-webkit-scrollbar{width:8px}
@@ -84,30 +86,30 @@
 
     <!-- Player -->
     <div class="mb-5 flex justify-center">
-      <div id="player" class="transition-all duration-500 ease-in-out layout-horizontal">
+      <div id="player" class="layout-horizontal">
         <img id="albumArt"
-             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%23ffffff'>Cover</text></svg>"
+             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='100%' height='100%' rx='14' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='16' fill='%23ffffff'>Album</text></svg>"
              alt="Album Art"
-             class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
+             class="album-art shadow-md transition-all">
 
-        <div class="flex-grow min-w-0 ml-3 title-area">
-          <h2 class="font-bold text-base flex flex-wrap items-baseline gap-1 text-glow justify-center md:justify-start">
-            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[360px]">노래 제목</span>
-            <span id="trackArtist" class="opacity-90 text-sm"></span>
+        <div class="flex-grow min-w-0 ml-4 title-area">
+          <h2 class="font-bold text-lg flex flex-wrap items-baseline gap-1 text-glow">
+            <span id="trackTitle" class="truncate">노래 제목</span>
+            <span id="trackArtist" class="opacity-90"></span>
           </h2>
-          <div class="flex items-center justify-center md:justify-start text-xs opacity-90 text-glow">
+          <div class="flex items-center text-sm opacity-90 text-glow">
             <span class="mr-2">SING 🎤</span>
             <p id="artistName">채널명</p>
           </div>
         </div>
 
         <div class="flex items-center right-area">
-          <div class="flex items-center space-x-2 text-xl">
+          <div class="flex items-center space-x-3 text-2xl">
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
           </div>
-          <canvas id="waveformCanvas" class="ml-3"></canvas>
+          <canvas id="waveformCanvas" class="ml-4"></canvas>
         </div>
       </div>
     </div>
@@ -133,10 +135,11 @@
   <!-- 설정 버튼 & 패널 -->
   <div class="fixed bottom-5 right-5 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756.426-1.756 2.924 0-3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756.426-1.756 2.924 0-3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
 
-    <div id="settingsPanel" class="card absolute bottom-16 right-0 w-72 bg-white/90 p-5 rounded-2xl shadow-2xl origin-bottom-right space-y-5">
+    <div id="settingsPanel" class="card absolute bottom-16 right-0 w-80 bg-white/90 p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-5">
+      <!-- 표시 채널명 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
         <div class="mt-1 flex items-center gap-2">
@@ -146,6 +149,7 @@
         </div>
       </div>
 
+      <!-- 커버 이미지 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
@@ -157,6 +161,7 @@
         </div>
       </div>
 
+      <!-- 카드 색상(그라데이션) -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 색상</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
@@ -167,7 +172,7 @@
         </div>
       </div>
 
-      <!-- 배경 색상 -->
+      <!-- 배경 색상 (윈도우 캡처용) -->
       <div>
         <label class="block text-sm font-medium text-gray-700">배경 색상</label>
         <div class="mt-2 flex items-center gap-3">
@@ -177,7 +182,7 @@
         </div>
       </div>
 
-      <!-- ✅ 레이아웃 토글 복구 -->
+      <!-- 레이아웃 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
         <div class="mt-2 flex flex-row items-center gap-2">
@@ -186,6 +191,7 @@
         </div>
       </div>
 
+      <!-- 파형 속도 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">파형 속도</label>
         <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
@@ -236,6 +242,7 @@
     function setCssVar(name, value){ document.documentElement.style.setProperty(name, value); }
     function updatePlayerGradient(){ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); }
 
+    /* 배경 색상 (윈도우 캡처 보정용) */
     function setBackgroundColor(color){
       document.documentElement.style.setProperty('background', color, 'important');
       document.documentElement.style.setProperty('background-color', color, 'important');
@@ -244,7 +251,7 @@
     }
     function resetBackgroundToTransparent(){ setBackgroundColor('rgba(0,0,0,0)'); }
 
-    /* 레이아웃 토글 */
+    /* 레이아웃 */
     function setLayout(mode){
       if (mode === 'vertical'){
         playerDiv.classList.remove('layout-horizontal');
@@ -263,9 +270,10 @@
       }
     }
 
-    /* Settings interactions */
+    /* 설정 패널 동작 */
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
     applyDisplayName.addEventListener('click', ()=>{ const v=displayNameInput.value.trim(); if(v) artistNameP.textContent=v; });
+
     imageUpload.addEventListener('change', e=>{
       const f=e.target.files[0]; if(!f) return;
       const r=new FileReader();
@@ -273,33 +281,34 @@
       r.readAsDataURL(f);
     });
     revertCover.addEventListener('click', ()=>{ albumArtImg.src=originalAlbumArtUrl || PLACEHOLDER; });
+
     applyColors.addEventListener('click', updatePlayerGradient);
     resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
 
-    applyBgColor.addEventListener('click', ()=>{ setBackgroundColor(bgColorPicker.value||'#000000'); });
+    applyBgColor.addEventListener('click', ()=> setBackgroundColor(bgColorPicker.value||'#000000'));
     resetBgColor.addEventListener('click', resetBackgroundToTransparent);
 
     layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
     layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
 
-    /* Waveform */
+    /* 파형 애니메이션 (성능+미관) */
     function initWaveform(canvas, options = {}) {
       if (!canvas) return;
-      const cfg = { barCount:16,gap:3,smoothing:0.1,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.9)',glowBlur:5,glowColor:'rgba(255,255,255,0.35)', ...options };
+      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.9)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const ctx = canvas.getContext('2d');
-      let prev=new Array(cfg.barCount).fill(0), target=new Array(cfg.barCount).fill(0);
-      let lastW=0,lastH=0, t0=null;
-      const ease=t=>0.5*(1-Math.cos(Math.PI*2*t));
+      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
+      let lastW=0,lastH=0, startedAt=null;
+      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
       function resizeIfNeeded(){
-        const cssW=canvas.clientWidth||canvas.width||96, cssH=canvas.clientHeight||canvas.height||32;
+        const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40;
         if(cssW!==lastW||cssH!==lastH){
           lastW=cssW; lastH=cssH;
           canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr);
           ctx.setTransform(dpr,0,0,dpr,0,0);
         }
       }
-      function rrect(ctx,x,y,w,h,r){
+      function roundRect(ctx,x,y,w,h,r){
         const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
         ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
         ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
@@ -307,21 +316,21 @@
         ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
       }
       function render(ts){
-        if(!t0) t0=ts; const t=(ts-t0)/1000;
-        resizeIfNeeded(); const W=canvas.clientWidth||96, H=canvas.clientHeight||32;
+        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
+        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
         ctx.clearRect(0,0,W,H);
-        const bw=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
         ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
         for(let i=0;i<cfg.barCount;i++){
-          const base=ease((t*cfg.baseSpeedHz + i*0.18)%1);
-          const ripple=ease((t*cfg.rippleSpeedHz + i*0.35)%1);
+          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
+          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
           const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
           const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
-          target[i]=H*ratio;
-          const h=prev[i]+(target[i]-prev[i])*cfg.smoothing;
-          prev[i]=h;
-          const x=i*(bw+cfg.gap), y=H-h, r=Math.min(3,bw*0.35);
-          rrect(ctx,x,y,bw,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+          targetHeights[i]=H*ratio;
+          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+          prevHeights[i]=h;
+          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
+          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
         }
         ctx.shadowBlur=0; ctx.shadowColor='transparent';
         requestAnimationFrame(render);
@@ -329,7 +338,7 @@
       requestAnimationFrame(render);
       window.addEventListener('resize', resizeIfNeeded);
       return {
-        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz=0.6*mult; cfg.rippleSpeedHz=1.2*mult; }
+        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz = 0.6 * mult; cfg.rippleSpeedHz = 1.2 * mult; }
       };
     }
     const waveform = initWaveform(waveformCanvas);
@@ -340,7 +349,8 @@
     }
     speedInput.addEventListener('input', applySpeedUI);
 
-    /* Search */
+    /* 검색: Spotify 기본, 실패 시 iTunes 폴백 */
+    // ⚠️ 실제 배포에서는 프론트에 Secret 노출 금지
     const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
     const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";
     let spotifyToken = null;
@@ -366,11 +376,15 @@
       const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
         headers:{'Authorization':`Bearer ${spotifyToken}`}
       });
-      if(res.status===401){ spotifyToken = await getSpotifyToken(); if(!spotifyToken) return null; return searchSpotify(q); }
+      if(res.status===401){ spotifyToken = await getSpotifyToken(); if (!spotifyToken) return null; return searchSpotify(q); }
       if(!res.ok) return null;
       const data=await res.json();
       const items = data?.tracks?.items || [];
-      return items.map(t=>({ name:t.name, artists:t.artists?.map(a=>({name:a.name}))||[], albumImage:(t.album?.images?.[1]?.url)||(t.album?.images?.[0]?.url)||null }));
+      return items.map(t=>({
+        name: t.name,
+        artists: t.artists?.map(a=>({name:a.name})) || [],
+        albumImage: (t.album?.images?.[1]?.url) || (t.album?.images?.[0]?.url) || null
+      }));
     }
 
     async function searchItunes(q){
@@ -384,7 +398,9 @@
       let list = await searchSpotify(q);
       if (!list || list.length===0){
         list = await searchItunes(q);
-        if (!CLIENT_ID || !CLIENT_SECRET){ statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.'; }
+        if (!CLIENT_ID || !CLIENT_SECRET){
+          statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.';
+        }
       }
       displayResults(list);
     }
