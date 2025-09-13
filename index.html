@@ -2,429 +2,60 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Search</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>프로필 선택</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --ply-primary:#A855F7;
-      --ply-secondary:#7C3AED;
-    }
-
-    /* ✅ 전체 배경 투명 */
-    html, body {
-      background: rgba(0,0,0,0) !important;
-      background-color: rgba(0,0,0,0) !important;
-      margin: 0;
-      padding: 0;
-    }
-
-    body{font-family:'Noto Sans KR',sans-serif}
-
-    .card{
-      background:#fff;
-      border-radius:20px;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
-    }
-
-    #searchResults::-webkit-scrollbar{width:8px}
-    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
-
-    /* Player */
-    #player{
-      display:flex; color:#fff;
-      background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
-      border-radius:1rem;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
-    }
-    #player.layout-horizontal{flex-direction:row;align-items:center;width:100%;max-width:920px}
-    #player.layout-horizontal .album-art{width:5rem;height:5rem}
-    #player.layout-vertical{flex-direction:column;align-items:center;width:320px}
-    #player.layout-vertical .album-art{width:10rem;height:10rem}
-
-    .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
-
-    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
-    #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
-
-    #waveformCanvas{width:120px;height:40px}
-    @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
+    html, body { background: transparent; margin:0; }
+    body { font-family: 'Noto Sans KR', sans-serif; }
   </style>
 </head>
+<body class="min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-md mx-auto p-6 bg-white/90 rounded-2xl shadow-xl backdrop-blur">
+    <h1 class="text-2xl font-bold text-purple-700 mb-4 text-center">프로필 선택</h1>
 
-<body class="flex items-center justify-center min-h-screen">
-  <div class="w-full max-w-3xl mx-auto p-4">
+    <label class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+    <input id="nameInput" type="text" placeholder="예: 나링"
+           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
 
-    <!-- Player -->
-    <div class="mb-8 flex justify-center">
-      <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
-        <img id="albumArt"
-             src="https://placehold.co/80x80/6d28d9/ffffff?text=Album"
-             alt="Album Art"
-             class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
-
-        <div class="flex-grow min-w-0 ml-4">
-          <h2 class="font-bold text-lg flex flex-wrap items-baseline gap-1 text-glow">
-            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[460px]">노래 제목</span>
-            <span id="trackArtist" class="opacity-90"></span>
-          </h2>
-          <div class="flex items-center text-sm opacity-90 text-glow">
-            <span class="mr-2">SING 🎤</span>
-            <p id="artistName">채널명</p>
-          </div>
-        </div>
-
-        <div class="flex items-center mt-3 md:mt-0">
-          <div class="flex items-center space-x-2 text-2xl">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
-          </div>
-          <canvas id="waveformCanvas" class="ml-4"></canvas>
-        </div>
-      </div>
+    <div class="mt-4 flex gap-2">
+      <button id="enterBtn"
+              class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 active:scale-[.99]">
+        들어가기
+      </button>
+      <button id="clearBtn"
+              class="px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+        최근 이름 지우기
+      </button>
     </div>
 
-   <header class="text-center mb-6">
-      <h1 class="text-2xl font-bold text-purple-800">Music search</h1>
-    </header>
-
-    <!-- Search -->
-    <section class="card p-4 mb-6">
-      <div class="flex w-full items-center gap-2">
-        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
-               class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
-        <button id="searchButton"
-                class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">
-          검색
-        </button>
-      </div>
-    </section>
-
-    <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
-    <section>
-      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
-    </section>
+    <p class="mt-3 text-xs text-gray-500">
+      이름을 입력하면 저장된 색상/채널명/속도를 불러옵니다.
+    </p>
   </div>
 
-  <!-- Settings 패널 (파형 속도 조절 포함) -->
-  <div class="fixed bottom-6 right-6 z-50">
-    <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-    </button>
+  <script type="module">
+    // 최근 사용한 이름 자동 채우기
+    const nameInput = document.getElementById('nameInput');
+    const enterBtn  = document.getElementById('enterBtn');
+    const clearBtn  = document.getElementById('clearBtn');
 
-    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
-      <!-- 표시 채널명 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
-        <div class="mt-1 flex items-center gap-2">
-          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
-                 class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
-        </div>
-      </div>
+    const last = localStorage.getItem('currentProfile') || '';
+    if (last) nameInput.value = last;
 
-      <!-- 커버 이미지 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
-        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
-          <label class="cursor-pointer h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
-            <span>이미지 업로드</span>
-            <input id="imageUpload" type="file" class="hidden" accept="image/*">
-          </label>
-          <button id="revertCover" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
-        </div>
-      </div>
-
-      <!-- 카드 색상 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">카드 색상</label>
-        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
-          <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
-          <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
-        </div>
-      </div>
-
-      <!-- 카드 레이아웃 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
-        <div class="mt-2 flex flex-row items-center gap-2">
-          <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
-          <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
-        </div>
-      </div>
-
-      <!-- 파형 속도 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">파형 속도</label>
-        <div class="flex items-center gap-3">
-          <span class="text-xs text-gray-500 leading-none">느리게</span>
-          <input id="waveSpeedRange" type="range" min="0.4" max="2.0" step="0.05" value="1"
-                 class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-500" />
-          <span class="text-xs text-gray-500 leading-none">빠르게</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const clientId = '3bdf3377e2c24913a0fbf5a9d1fdb3d0';
-    const clientSecret = '9f21f9d8bef14948b07f02e5e826691c';
-
-    const playerDiv = document.getElementById('player');
-    const albumArtImg = document.getElementById('albumArt');
-    const trackTitleSpan = document.getElementById('trackTitle');
-    const trackArtistSpan = document.getElementById('trackArtist');
-    const artistNameP = document.getElementById('artistName');
-    const waveformCanvas = document.getElementById('waveformCanvas');
-
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const statusDiv = document.getElementById('status');
-    const searchResultsContainer = document.getElementById('searchResults');
-
-    const settingsIconBtn = document.getElementById('settingsIconBtn');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const displayNameInput = document.getElementById('displayNameInput');
-    const applyDisplayName = document.getElementById('applyDisplayName');
-    const imageUpload = document.getElementById('imageUpload');
-    const revertCover = document.getElementById('revertCover');
-    const primaryColor = document.getElementById('primaryColor');
-    const secondaryColor = document.getElementById('secondaryColor');
-    const applyColors = document.getElementById('applyColors');
-    const resetColors = document.getElementById('resetColors');
-    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
-    const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
-
-    // 새로 추가: 파형 속도 슬라이더
-    const waveSpeedRange = document.getElementById('waveSpeedRange');
-
-    let accessToken = null;
-    let originalAlbumArtUrl = '';
-    let isCustomCoverActive = false;
-
-    const clearResults = () => {
-      searchResultsContainer.innerHTML = '';
-      searchResultsContainer.classList.add('hidden');
-    };
-    const showResults = () => {
-      searchResultsContainer.classList.remove('hidden');
-    };
-
-    function updatePlayerGradient(isReset=false){
-      const color1 = isReset ? '#A855F7' : primaryColor.value;
-      const color2 = isReset ? '#7C3AED' : secondaryColor.value;
-      const direction = playerDiv.classList.contains('layout-vertical') ? '180deg' : '90deg';
-      playerDiv.style.background = `linear-gradient(${direction}, ${color1}, ${color2})`;
-      document.documentElement.style.setProperty('--ply-primary', color1);
-      document.documentElement.style.setProperty('--ply-secondary', color2);
-    }
-
-    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
-    applyDisplayName.addEventListener('click', ()=>{
-      const v = displayNameInput.value.trim();
-      if(v) artistNameP.textContent = v;
+    enterBtn.addEventListener('click', () => {
+      const name = nameInput.value.trim();
+      if (!name) { alert('이름을 입력해 주세요.'); return; }
+      localStorage.setItem('currentProfile', name);
+      location.href = `player.html?name=${encodeURIComponent(name)}`;
     });
 
-    imageUpload.addEventListener('change', e=>{
-      const f=e.target.files[0]; if(!f) return;
-      const r=new FileReader();
-      r.onload=ev=>{ albumArtImg.src=ev.target.result; isCustomCoverActive=true; };
-      r.readAsDataURL(f);
+    clearBtn.addEventListener('click', () => {
+      localStorage.removeItem('currentProfile');
+      nameInput.value = '';
+      nameInput.focus();
     });
-    revertCover.addEventListener('click', ()=>{ if(originalAlbumArtUrl) albumArtImg.src=originalAlbumArtUrl; isCustomCoverActive=false; });
-
-    applyColors.addEventListener('click', ()=> updatePlayerGradient(false));
-    resetColors.addEventListener('click', ()=>{
-      primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(true);
-    });
-    primaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
-    secondaryColor.addEventListener('input', ()=> updatePlayerGradient(false));
-
-    function setBtnOn(btn){ btn.classList.add('bg-purple-500','text-white'); btn.classList.remove('bg-gray-200','text-gray-700'); }
-    function setBtnOff(btn){ btn.classList.add('bg-gray-200','text-gray-700'); btn.classList.remove('bg-purple-500','text-white'); }
-
-    layoutHorizontalBtn.addEventListener('click', ()=>{
-      playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
-      setBtnOn(layoutHorizontalBtn); setBtnOff(layoutVerticalBtn);
-      updatePlayerGradient(false);
-    });
-    layoutVerticalBtn.addEventListener('click', ()=>{
-      playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
-      setBtnOn(layoutVerticalBtn); setBtnOff(layoutHorizontalBtn);
-      updatePlayerGradient(false);
-    });
-
-    // 파형 애니메이션: 컨트롤러 반환하도록 수정
-    function initWaveform(canvas, options = {}) {
-      if (!canvas) return null;
-      const cfg = {
-        barCount:18, gap:3, smoothing:0.08,
-        baseSpeedHz:0.6, rippleSpeedHz:1.2,
-        baseWeight:0.75, rippleWeight:0.25,
-        minRatio:0.25, maxRatio:0.85,
-        fillStyle:'rgba(255,255,255,0.88)',
-        glowBlur:6, glowColor:'rgba(0,0,0,0.0)',
-        ...options
-      };
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const ctx = canvas.getContext('2d');
-      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
-      let lastW=0,lastH=0, startedAt=null;
-
-      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
-
-      function resizeIfNeeded(){
-        const cssW=canvas.clientWidth||120, cssH=canvas.clientHeight||40;
-        if(cssW!==lastW||cssH!==lastH){
-          lastW=cssW; lastH=cssH;
-          canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr);
-          ctx.setTransform(dpr,0,0,dpr,0,0);
-        }
-      }
-
-      function roundRect(ctx,x,y,w,h,r){
-        const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
-        ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
-        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
-        ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
-        ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
-      }
-
-      function render(ts){
-        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
-        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
-        ctx.clearRect(0,0,W,H);
-        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
-        for(let i=0;i<cfg.barCount;i++){
-          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
-          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
-          const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
-          const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
-          targetHeights[i]=H*ratio;
-          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
-          prevHeights[i]=h;
-          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
-          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
-        }
-        requestAnimationFrame(render);
-      }
-      requestAnimationFrame(render);
-      window.addEventListener('resize', resizeIfNeeded);
-
-      // 컨트롤러: 속도 조절
-      const base0 = 0.6, ripple0 = 1.2;
-      return {
-        setSpeed(multiplier){
-          // 최소 0.1 방어
-          const m = Math.max(0.1, Number(multiplier)||1);
-          cfg.baseSpeedHz   = base0   * m;
-          cfg.rippleSpeedHz = ripple0 * m;
-        }
-      };
-    }
-
-    // 컨트롤러 보관
-    const waveformCtrl = initWaveform(waveformCanvas);
-
-    // 파형 속도 슬라이더 연동
-    if (waveSpeedRange && waveformCtrl){
-      const applySpeed = () => {
-        waveformCtrl.setSpeed(waveSpeedRange.value);
-      };
-      waveSpeedRange.addEventListener('input', applySpeed);
-      applySpeed(); // 초기값 적용
-    }
-
-    // Spotify API
-    const getAccessToken = async () => {
-      try{
-        const res=await fetch('https://accounts.spotify.com/api/token',{
-          method:'POST',
-          headers:{
-            'Content-Type':'application/x-www-form-urlencoded',
-            'Authorization':'Basic '+btoa(clientId+':'+clientSecret)
-          },
-          body:'grant_type=client_credentials'
-        });
-        if(!res.ok) throw new Error(res.statusText);
-        const data=await res.json(); return data.access_token;
-      }catch(e){ console.error(e); statusDiv.textContent="API 토큰 인증에 실패했습니다."; return null; }
-    };
-
-    const searchTracks = async (q) => {
-      if(!accessToken){
-        statusDiv.textContent="인증 중...";
-        accessToken=await getAccessToken();
-        if(!accessToken) return;
-      }
-      statusDiv.textContent="검색 중...";
-      clearResults();
-      try{
-        const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=20`,{
-          headers:{'Authorization':`Bearer ${accessToken}`}
-        });
-        if(!res.ok){
-          if(res.status===401){ accessToken=await getAccessToken(); if(accessToken) searchTracks(q); }
-          else throw new Error(res.statusText);
-          return;
-        }
-        const data=await res.json();
-        displayResults(data.tracks.items);
-      }catch(e){ console.error(e); statusDiv.textContent="검색 중 오류가 발생했습니다."; }
-    };
-
-    const displayResults = (tracks) => {
-      searchResultsContainer.innerHTML='';
-      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; clearResults(); return; }
-      statusDiv.textContent=''; showResults();
-      tracks.forEach(track=>{
-        const card=document.createElement('div');
-        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
-        const albumImage = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/300x300/e9d5ff/a855f7?text=?';
-        const artistNames = track.artists.map(a=>a.name).join(', ');
-        card.innerHTML = `
-          <div class="relative">
-            <img src="${albumImage}" alt="${track.album.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
-          </div>
-          <div class="mt-2 text-center">
-            <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
-            <p class="text-xs text-gray-600 truncate">${artistNames}</p>
-          </div>`;
-        card.addEventListener('click', ()=>updatePlayerUI(track));
-        searchResultsContainer.appendChild(card);
-      });
-    };
-
-    const updatePlayerUI = (track) => {
-      const imageUrl = track.album.images[1] ? track.album.images[1].url : 'https://placehold.co/80x80/6d28d9/ffffff?text=Album';
-      const artistNames = track.artists.map(a=>a.name).join(', ');
-      originalAlbumArtUrl = imageUrl;
-      imageUpload.value = null;
-      if(!isCustomCoverActive) albumArtImg.src = imageUrl;
-      trackTitleSpan.textContent = track.name;
-      trackArtistSpan.textContent = `- ${artistNames}`;
-    };
-
-    updatePlayerGradient(true);
-    clearResults();
-
-    const performSearch = () => {
-      const q = searchInput.value.trim();
-      if(!q){ statusDiv.textContent=''; clearResults(); return; }
-      searchTracks(q);
-    };
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
-    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
-  });
   </script>
 </body>
 </html>
-
