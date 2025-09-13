@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>뮤직 플레이어</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    html, body { background: transparent; margin:0; }
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .player.layout-horizontal{display:flex;flex-direction:row;align-items:center;width:100%}
+    .player.layout-horizontal .album-art{width:5rem;height:5rem}
+    .glow{filter: drop-shadow(0 6px 16px rgba(0,0,0,.18))}
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
+  <!-- 카드 -->
+  <div id="card" class="w-full max-w-xl p-6 rounded-2xl shadow-xl glow"
+       style="background: linear-gradient(90deg,#A855F7,#7C3AED);">
+
+    <div class="flex items-center justify-between mb-4">
+      <div class="text-white/90 text-sm">프로필: <span id="profileLabel"></span></div>
+      <a href="index.html" class="text-white/80 underline">프로필 변경</a>
+    </div>
+
+    <div class="player layout-horizontal text-white">
+      <img id="coverImg" alt="cover"
+           class="album-art rounded-lg object-cover shadow"
+           src="https://placehold.co/120x120/6d28d9/ffffff?text=Cover">
+      <div class="ml-4 min-w-0">
+        <h2 class="font-bold text-lg truncate" id="trackTitle">노래 제목</h2>
+        <div class="text-sm opacity-85"><span>SING 🎤</span> <span id="artistDisp" class="ml-2"></span></div>
+      </div>
+      <canvas id="waveformCanvas" width="140" height="44" class="ml-auto"></canvas>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-4">
+      <!-- 채널명 -->
+      <div>
+        <label class="block text-sm text-white/90 mb-1">표시 채널명</label>
+        <input id="channelInput" type="text" placeholder="예: SING"
+               class="w-full px-3 py-2 rounded border border-gray-300">
+      </div>
+
+      <!-- 색상 -->
+      <div>
+        <label class="block text-sm text-white/90 mb-1">카드 색상</label>
+        <div class="flex gap-2">
+          <input id="primaryColor"   type="color" value="#A855F7" class="w-1/2 h-10">
+          <input id="secondaryColor" type="color" value="#7C3AED" class="w-1/2 h-10">
+        </div>
+      </div>
+
+      <!-- 파형 속도 -->
+      <div>
+        <label class="block text-sm text-white/90 mb-1">파형 속도</label>
+        <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
+        <div class="flex justify-between text-xs text-white/75 mt-1">
+          <span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span>
+        </div>
+      </div>
+
+      <!-- 커버 업로드 -->
+      <div>
+        <label class="block text-sm text-white/90 mb-1">커버 이미지</label>
+        <div class="flex gap-2 items-center">
+          <input id="coverFile" type="file" accept="image/*"
+                 class="block w-full text-sm text-white/90 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-white file:text-purple-700 file:font-medium file:cursor-pointer" />
+          <button id="revertCover" class="px-3 py-1 rounded bg-white/85 text-purple-700 text-sm">기본 커버</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-2">
+      <button id="saveBtn" class="flex-1 bg-white text-purple-700 py-2 rounded-lg hover:bg-gray-100">저장</button>
+      <button id="reloadBtn" class="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">다시 불러오기</button>
+    </div>
+  </div>
+
+  <!-- Supabase SDK -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    // === Supabase 연결 ===
+    const SUPABASE_URL = "https://tasppztkvrjwxkkdjfvj.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhc3BwenRrdnJqd3hra2RqZnZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NjIwNzksImV4cCI6MjA3MjIzODA3OX0.3Wi4BH_OZSE3GPEEM3Cbb0mQWzRUKWaG4Zyk97n3TNo";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // === DOM ===
+    const profileLabel   = document.getElementById('profileLabel');
+    const card           = document.getElementById('card');
+    const coverImg       = document.getElementById('coverImg');
+    const trackTitle     = document.getElementById('trackTitle');
+    const artistDisp     = document.getElementById('artistDisp');
+    const coverFile      = document.getElementById('coverFile');
+    const revertCover    = document.getElementById('revertCover');
+    const channelInput   = document.getElementById('channelInput');
+    const primaryColor   = document.getElementById('primaryColor');
+    const secondaryColor = document.getElementById('secondaryColor');
+    const speedInput     = document.getElementById('speedInput');
+    const speedVal       = document.getElementById('speedVal');
+    const saveBtn        = document.getElementById('saveBtn');
+    const reloadBtn      = document.getElementById('reloadBtn');
+    const PLACEHOLDER    = "https://placehold.co/120x120/6d28d9/ffffff?text=Cover";
+
+    // === 프로필 이름 ===
+    const params = new URLSearchParams(location.search);
+    const profileName = (params.get('name') || localStorage.getItem('currentProfile') || '').trim();
+    if (!profileName) location.replace('index.html');
+    profileLabel.textContent = profileName;
+    localStorage.setItem('currentProfile', profileName);
+
+    // === 카드 그라데이션 & 파형 ===
+    function updateGradient() {
+      card.style.background = `linear-gradient(90deg, ${primaryColor.value}, ${secondaryColor.value})`;
+    }
+    primaryColor.addEventListener('input', updateGradient);
+    secondaryColor.addEventListener('input', updateGradient);
+
+    // 파형(캔버스) 부드러운 애니메이션
+    const canvas = document.getElementById('waveformCanvas');
+    const ctx = canvas.getContext('2d');
+    const cfg = { barCount: 18, gap: 3, smoothing: 0.08, baseHz: 0.6, rippleHz: 1.2, minR: 0.25, maxR: 0.85 };
+    let prevHeights = new Array(cfg.barCount).fill(0);
+
+    function render(ts) {
+      const t = ts/1000;
+      const W = canvas.width/1, H = canvas.height/1;
+      ctx.clearRect(0,0,W,H);
+      const barW = Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+      for(let i=0;i<cfg.barCount;i++){
+        const base = 0.5*(1-Math.cos(Math.PI*2*(t*cfg.baseHz + i*0.18)));
+        const rip  = 0.5*(1-Math.cos(Math.PI*2*(t*cfg.rippleHz + i*0.35)));
+        const mix  = 0.75*base + 0.25*rip;
+        const ratio = cfg.minR + (cfg.maxR-cfg.minR)*mix;
+        const target = H*ratio;
+        const h = prevHeights[i] + (target - prevHeights[i]) * cfg.smoothing;
+        prevHeights[i] = h;
+        const x = i*(barW+cfg.gap), y = H-h;
+        roundRect(ctx,x,y,barW,h,Math.min(3,barW*0.35));
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.shadowBlur = 6; ctx.shadowColor='rgba(255,255,255,0.35)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      requestAnimationFrame(render);
+    }
+    function roundRect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.lineTo(x+w-r,y);c.quadraticCurveTo(x+w,y,x+w,y+r);c.lineTo(x+w,y+h-r);c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);c.lineTo(x+r,y+h);c.quadraticCurveTo(x,y+h,x,y+h-r);c.lineTo(x,y+r);c.quadraticCurveTo(x,y,x+r,y);c.closePath();}
+    requestAnimationFrame(render);
+
+    // 속도 슬라이더 → 파형 속도 반영
+    function applySpeed() {
+      const v = parseFloat(speedInput.value || '1');
+      speedVal.textContent = v.toFixed(2)+'x';
+      cfg.baseHz   = 0.6 * v;
+      cfg.rippleHz = 1.2 * v;
+    }
+    speedInput.addEventListener('input', applySpeed);
+
+    // === Supabase: 불러오기 ===
+    async function loadProfile() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('settings')
+        .eq('name', profileName)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        alert('불러오기 오류: ' + error.message);
+        return;
+      }
+
+      const s = data?.settings || {
+        channel: '',
+        primary: '#A855F7',
+        secondary: '#7C3AED',
+        speed: 1,
+        coverUrl: ''
+      };
+
+      channelInput.value   = s.channel || '';
+      primaryColor.value   = s.primary || '#A855F7';
+      secondaryColor.value = s.secondary || '#7C3AED';
+      speedInput.value     = s.speed ?? 1;
+      applySpeed();
+      updateGradient();
+
+      if (s.coverUrl) coverImg.src = s.coverUrl;
+      artistDisp.textContent = s.channel || '';
+      trackTitle.textContent = '노래 제목';
+    }
+
+    // === Supabase: 저장(업서트) ===
+    async function saveProfile() {
+      try {
+        let coverUrl = (coverImg.src && coverImg.src !== PLACEHOLDER) ? coverImg.src : '';
+
+        // 새 파일 선택 시 업로드
+        if (coverFile.files.length > 0) {
+          const file = coverFile.files[0];
+          const path = `uploads/${profileName}/${Date.now()}_${file.name}`;
+          const { error: upErr } = await supabase.storage.from('covers').upload(path, file, { upsert: true });
+          if (upErr) throw upErr;
+          coverUrl = supabase.storage.from('covers').getPublicUrl(path).data.publicUrl;
+          coverImg.src = coverUrl;
+        }
+
+        const settings = {
+          channel:   channelInput.value.trim(),
+          primary:   primaryColor.value,
+          secondary: secondaryColor.value,
+          speed:     parseFloat(speedInput.value),
+          coverUrl
+        };
+
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({ name: profileName, settings }, { onConflict: 'name' });
+
+        if (error) throw error;
+        alert('저장 완료!');
+      } catch (e) {
+        console.error(e);
+        alert('저장 중 오류: ' + (e?.message || e));
+      }
+    }
+
+    function setDefaultCover(){ coverImg.src = PLACEHOLDER; }
+
+    revertCover.addEventListener('click', setDefaultCover);
+    saveBtn.addEventListener('click', saveProfile);
+    reloadBtn.addEventListener('click', loadProfile);
+
+    // 초기 로드
+    updateGradient();
+    applySpeed();
+    loadProfile();
+  </script>
+</body>
+</html>
