@@ -12,14 +12,8 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* ✅ 전체 배경 투명 */
-    html, body {
-      background: rgba(0,0,0,0) !important;
-      background-color: rgba(0,0,0,0) !important;
-      margin: 0;
-      padding: 0;
-    }
-
+    /* 기본(브라우저 미리보기)은 흰 배경, OBS/프릭샷은 체크박스/쿼리로 투명 전환 */
+    html, body { margin:0; padding:0; background:#ffffff; }
     body{font-family:'Noto Sans KR',sans-serif}
 
     .card{
@@ -62,7 +56,7 @@
     <div class="mb-8 flex justify-center">
       <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
         <img id="albumArt"
-             src="https://placehold.co/80x80/6d28d9/ffffff?text=Album"
+             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23ffffff'>Cover</text></svg>"
              alt="Album Art"
              class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
 
@@ -88,8 +82,359 @@
       </div>
     </div>
 
-    <!-- 검색 / 설정 패널 부분 필요 시 추가 -->
-    <!-- ... 기존 코드 붙이면 됨 -->
+    <!-- 검색 -->
+    <section class="card p-4 mb-6">
+      <div class="flex w-full items-center gap-2">
+        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
+               class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+        <button id="searchButton"
+                class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">
+          검색
+        </button>
+      </div>
+    </section>
+
+    <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
+    <section>
+      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
+    </section>
   </div>
+
+  <!-- 설정 버튼 & 패널 -->
+  <div class="fixed bottom-6 right-6 z-50">
+    <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </button>
+
+    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
+      <!-- 표시 채널명 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
+        <div class="mt-1 flex items-center gap-2">
+          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
+                 class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+        </div>
+      </div>
+
+      <!-- 커버 이미지 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <label class="cursor-pointer h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
+            <span>이미지 업로드</span>
+            <input id="imageUpload" type="file" class="hidden" accept="image/*">
+          </label>
+          <button id="revertCover" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+        </div>
+      </div>
+
+      <!-- 카드 색상 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 색상</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+        </div>
+      </div>
+
+      <!-- 레이아웃 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
+        <div class="mt-2 flex flex-row items-center gap-2">
+          <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
+          <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
+        </div>
+      </div>
+
+      <!-- 파형 속도 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">파형 속도</label>
+        <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
+        <div class="flex justify-between text-xs text-gray-500"><span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span></div>
+      </div>
+
+      <!-- 투명 배경 -->
+      <div class="pt-2 border-t">
+        <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+          <input id="transparentToggle" type="checkbox" class="h-4 w-4">
+          투명 배경 사용 (OBS/프릭샷)
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- OBS/프릭샷 자동 투명: ?transparent=1 또는 UA 감지 ---------- */
+    (function(){
+      const qs = new URLSearchParams(location.search);
+      const want = qs.get('transparent') === '1';
+      const looksLikeObs = /obs|frikshot/i.test(navigator.userAgent);
+      if (want || looksLikeObs) {
+        document.documentElement.style.background = 'transparent';
+        document.documentElement.style.backgroundColor = 'rgba(0,0,0,0)';
+        document.body.style.background = 'transparent';
+        document.body.style.backgroundColor = 'rgba(0,0,0,0)';
+        setTimeout(()=>{ const el=document.getElementById('transparentToggle'); if(el) el.checked=true; }, 0);
+      }
+    })();
+
+    /* -------------------- DOM -------------------- */
+    const playerDiv = document.getElementById('player');
+    const albumArtImg = document.getElementById('albumArt');
+    const trackTitleSpan = document.getElementById('trackTitle');
+    const trackArtistSpan = document.getElementById('trackArtist');
+    const artistNameP = document.getElementById('artistName');
+    const waveformCanvas = document.getElementById('waveformCanvas');
+
+    const searchInput = document.getElementById('searchInput');
+    const searchButton = document.getElementById('searchButton');
+    const statusDiv = document.getElementById('status');
+    const searchResultsContainer = document.getElementById('searchResults');
+
+    const settingsIconBtn = document.getElementById('settingsIconBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const displayNameInput = document.getElementById('displayNameInput');
+    const applyDisplayName = document.getElementById('applyDisplayName');
+    const imageUpload = document.getElementById('imageUpload');
+    const revertCover = document.getElementById('revertCover');
+    const primaryColor = document.getElementById('primaryColor');
+    const secondaryColor = document.getElementById('secondaryColor');
+    const applyColors = document.getElementById('applyColors');
+    const resetColors = document.getElementById('resetColors');
+    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+    const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+    const speedInput = document.getElementById('speedInput');
+    const speedVal = document.getElementById('speedVal');
+    const transparentToggle = document.getElementById('transparentToggle');
+
+    const PLACEHOLDER = albumArtImg.src; // 인라인 SVG
+    let originalAlbumArtUrl = PLACEHOLDER;
+
+    /* -------------------- Helpers -------------------- */
+    function setCssVar(name, value){ document.documentElement.style.setProperty(name, value); }
+    function updatePlayerGradient(){ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); }
+    function setLayout(mode){
+      if (mode === 'vertical'){
+        playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
+      } else {
+        playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
+      }
+      updatePlayerGradient();
+      // 버튼 토글
+      if (mode === 'vertical'){
+        layoutVerticalBtn.classList.replace('bg-gray-200','bg-purple-500');
+        layoutVerticalBtn.classList.replace('text-gray-700','text-white');
+        layoutHorizontalBtn.classList.replace('bg-purple-500','bg-gray-200');
+        layoutHorizontalBtn.classList.replace('text-white','text-gray-700');
+      } else {
+        layoutHorizontalBtn.classList.replace('bg-gray-200','bg-purple-500');
+        layoutHorizontalBtn.classList.replace('text-gray-700','text-white');
+        layoutVerticalBtn.classList.replace('bg-purple-500','bg-gray-200');
+        layoutVerticalBtn.classList.replace('text-white','text-gray-700');
+      }
+    }
+
+    /* -------------------- Settings interactions -------------------- */
+    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+    applyDisplayName.addEventListener('click', ()=>{ const v=displayNameInput.value.trim(); if(v) artistNameP.textContent=v; });
+
+    imageUpload.addEventListener('change', e=>{
+      const f=e.target.files[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ albumArtImg.src=ev.target.result; };
+      r.readAsDataURL(f);
+    });
+    revertCover.addEventListener('click', ()=>{ albumArtImg.src=originalAlbumArtUrl || PLACEHOLDER; });
+
+    applyColors.addEventListener('click', updatePlayerGradient);
+    resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
+
+    layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
+    layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
+
+    transparentToggle.addEventListener('change', (e)=>{
+      const on = e.target.checked;
+      if (on){
+        document.documentElement.style.background = 'transparent';
+        document.documentElement.style.backgroundColor = 'rgba(0,0,0,0)';
+        document.body.style.background = 'transparent';
+        document.body.style.backgroundColor = 'rgba(0,0,0,0)';
+      } else {
+        document.documentElement.style.background = '#ffffff';
+        document.body.style.background = '#ffffff';
+      }
+    });
+
+    /* -------------------- Waveform animation -------------------- */
+    function initWaveform(canvas, options = {}) {
+      if (!canvas) return;
+      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const ctx = canvas.getContext('2d');
+      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
+      let lastW=0,lastH=0, startedAt=null;
+      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
+      function resizeIfNeeded(){
+        const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40;
+        if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+      }
+      function roundRect(ctx,x,y,w,h,r){
+        const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
+        ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+        ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+        ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+        ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
+      }
+      function render(ts){
+        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
+        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
+        ctx.clearRect(0,0,W,H);
+        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+        ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
+        for(let i=0;i<cfg.barCount;i++){
+          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
+          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+          const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
+          const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+          targetHeights[i]=H*ratio;
+          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
+          prevHeights[i]=h;
+          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
+          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+        }
+        ctx.shadowBlur=0; ctx.shadowColor='transparent';
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+      window.addEventListener('resize', resizeIfNeeded);
+      return {
+        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz = 0.6 * mult; cfg.rippleSpeedHz = 1.2 * mult; }
+      };
+    }
+    const waveform = initWaveform(waveformCanvas);
+    function applySpeedUI(){
+      const v = parseFloat(speedInput.value || "1");
+      speedVal.textContent = v.toFixed(2)+"x";
+      waveform?.setSpeed(v);
+    }
+    speedInput.addEventListener('input', applySpeedUI);
+
+    /* -------------------- Search: Spotify 기본, 실패 시 iTunes 폴백 -------------------- */
+    // ⚠️ 배포용은 절대 프론트에 Secret 넣지 마세요!
+    const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";      // 예: "13ada5c13a834887b16d181b5730a8b3"
+    const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";  // 예: "e29f4...." (배포 금지)
+
+    let spotifyToken = null;
+
+    async function getSpotifyToken(){
+      if (!CLIENT_ID || !CLIENT_SECRET) return null;
+      try{
+        const res = await fetch('https://accounts.spotify.com/api/token', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/x-www-form-urlencoded',
+            'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET)
+          },
+          body:'grant_type=client_credentials'
+        });
+        if(!res.ok) throw new Error('token fail');
+        const data=await res.json();
+        return data.access_token || null;
+      }catch(e){ console.warn('Spotify 토큰 실패:', e); return null; }
+    }
+
+    async function searchSpotify(q){
+      if (!spotifyToken) spotifyToken = await getSpotifyToken();
+      if (!spotifyToken) return null;
+
+      const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
+        headers:{'Authorization':`Bearer ${spotifyToken}`}
+      });
+      if(res.status===401){ // 토큰 만료 재시도
+        spotifyToken = await getSpotifyToken();
+        if (!spotifyToken) return null;
+        return searchSpotify(q);
+      }
+      if(!res.ok) return null;
+      const data=await res.json();
+      const items = data?.tracks?.items || [];
+      return items.map(t=>({
+        name: t.name,
+        artists: t.artists?.map(a=>({name:a.name})) || [],
+        albumImage: (t.album?.images?.[1]?.url) || (t.album?.images?.[0]?.url) || null
+      }));
+    }
+
+    async function searchItunes(q){
+      const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=24`);
+      const data = await res.json();
+      return (data.results||[]).map(it=>({
+        name: it.trackName,
+        artists: [{name: it.artistName}],
+        albumImage: it.artworkUrl100 || it.artworkUrl60 || null
+      }));
+    }
+
+    async function searchTracks(q){
+      statusDiv.textContent='검색 중...'; clearResults();
+      let list = await searchSpotify(q);
+      if (!list || list.length===0){
+        list = await searchItunes(q);
+        if (!CLIENT_ID || !CLIENT_SECRET){
+          statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.';
+        }
+      }
+      displayResults(list);
+    }
+
+    function clearResults(){ searchResultsContainer.innerHTML=''; searchResultsContainer.classList.add('hidden'); }
+    function showResults(){ searchResultsContainer.classList.remove('hidden'); }
+
+    function displayResults(tracks){
+      searchResultsContainer.innerHTML='';
+      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; clearResults(); return; }
+      statusDiv.textContent=''; showResults();
+
+      tracks.forEach(track=>{
+        const card=document.createElement('div');
+        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+        const albumImage = track.albumImage || PLACEHOLDER;
+        const artistNames = (track.artists||[]).map(a=>a.name).join(', ');
+        card.innerHTML = `
+          <div class="relative">
+            <img src="${albumImage}" alt="${track.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
+          </div>
+          <div class="mt-2 text-center">
+            <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
+            <p class="text-xs text-gray-600 truncate">${artistNames}</p>
+          </div>`;
+        card.addEventListener('click', ()=>{
+          originalAlbumArtUrl = albumImage;
+          albumArtImg.src = albumImage;
+          trackTitleSpan.textContent = track.name || '노래 제목';
+          trackArtistSpan.textContent = artistNames ? `- ${artistNames}` : '';
+        });
+        searchResultsContainer.appendChild(card);
+      });
+    }
+
+    function performSearch(){
+      const q = searchInput.value.trim();
+      if(!q){ statusDiv.textContent=''; clearResults(); return; }
+      searchTracks(q).catch(e=>{ console.error(e); statusDiv.textContent='검색 중 오류가 발생했습니다.'; });
+    }
+
+    searchButton.addEventListener('click', performSearch);
+    searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
+    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
+
+    /* -------------------- Init -------------------- */
+    updatePlayerGradient();
+    applySpeedUI();
+    setLayout('horizontal');
+  </script>
 </body>
 </html>
