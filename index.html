@@ -11,22 +11,34 @@
       --ply-primary:#A855F7;
       --ply-secondary:#7C3AED;
     }
-    /* ✅ 투명 배경 */
-    html, body{
-      background: transparent !important;
+
+    /* ✅ 전체 배경 투명 */
+    html, body {
+      background: rgba(0,0,0,0) !important;
+      background-color: rgba(0,0,0,0) !important;
+      margin: 0;
+      padding: 0;
     }
 
-    .card{background:#fff;border-radius:20px;box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)}
+    body{font-family:'Noto Sans KR',sans-serif}
+
+    .card{
+      background:#fff;
+      border-radius:20px;
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
+    }
 
     #searchResults::-webkit-scrollbar{width:8px}
     #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
 
+    /* Player */
     #player{
       display:flex; color:#fff;
       background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
-      border-radius:1rem; box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
+      border-radius:1rem;
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
     }
     #player.layout-horizontal{flex-direction:row;align-items:center;width:100%;max-width:920px}
     #player.layout-horizontal .album-art{width:5rem;height:5rem}
@@ -76,7 +88,7 @@
       </div>
     </div>
 
-    <header class="text-center mb-6">
+   <header class="text-center mb-6">
       <h1 class="text-2xl font-bold text-purple-800">Music search</h1>
     </header>
 
@@ -415,3 +427,4 @@
   </script>
 </body>
 </html>
+
