@@ -13,7 +13,8 @@
     }
 
     /* 기본(브라우저 미리보기)은 흰 배경, OBS/프릭샷은 체크박스/쿼리로 투명 전환 */
-    html, body { margin:0; padding:0; background:#ffffff; }
+    /* 임베드용: 기본 투명 강제 (프릭샷/OBS에서 흰 바탕 남는 이슈 방지) */
+    html, body { margin:0; padding:0; background: rgba(0,0,0,0) !important; }
     body{font-family:'Noto Sans KR',sans-serif}
 
     .card{
