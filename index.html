@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Search</title>
+  <title>Music Search (Compact)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -12,7 +12,7 @@
       --ply-secondary:#7C3AED;
     }
 
-    /* ✅ 브라우저 소스 최적화: 완전 투명 + 스크롤 제거 + 전체 채움 */
+    /* 완전 투명 + 가운데 정렬 + 스크롤 제거 */
     html, body{
       margin:0; padding:0;
       width:100%; height:100%;
@@ -25,154 +25,146 @@
       display:flex; align-items:center; justify-content:center;
     }
 
+    .wrap{ width:100%; max-width:560px; padding:16px; box-sizing:border-box; }
+
     /* 카드(검색 패널 등) */
     .card{
       background: rgba(255,255,255,0);
-      border-radius:20px;
+      border-radius:16px;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04)
     }
 
-    #searchResults::-webkit-scrollbar{width:8px}
-    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
-    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
-
-    /* Player */
+    /* Player — 컴팩트 사이즈 */
     #player{
       display:flex; color:#fff;
       background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
-      border-radius:1rem;
+      border-radius:14px;
+      padding:12px;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
     }
-    #player.layout-horizontal{flex-direction:row;align-items:center;width:100%;max-width:920px}
-    #player.layout-horizontal .album-art{width:5rem;height:5rem}
-    #player.layout-vertical{flex-direction:column;align-items:center;width:320px}
-    #player.layout-vertical .album-art{width:10rem;height:10rem}
+    #player.layout-horizontal{
+      flex-direction:row; align-items:center;
+      width:100%; max-width:520px;  /* ← 컴팩트 폭 */
+    }
+    #player.layout-horizontal .album-art{ width:56px; height:56px; } /* ← 아트 축소 */
+    #player.layout-vertical{ flex-direction:column; align-items:center; width:320px }
+    #player.layout-vertical .album-art{ width:96px; height:96px }
 
     .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
+    #waveformCanvas{ width:96px; height:32px }   /* ← 파형 축소 */
+    @media (min-width:768px){ #waveformCanvas{ width:110px; height:36px } }
 
     #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
     #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
 
-    #waveformCanvas{width:120px;height:40px}
-    @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
+    /* 검색 카드도 폭 맞춤 */
+    .search-wrap{ max-width:520px; margin:0 auto; }
 
-    .container{width:100%; max-width:1100px; padding:16px; box-sizing:border-box;}
+    /* 결과 스크롤바 */
+    #searchResults::-webkit-scrollbar{width:8px}
+    #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
+    #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
   </style>
 </head>
-
 <body>
-  <div class="container">
+  <div class="wrap">
 
     <!-- Player -->
-    <div class="mb-8 flex justify-center">
-      <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
+    <div class="mb-5 flex justify-center">
+      <div id="player" class="transition-all duration-500 ease-in-out layout-horizontal">
         <img id="albumArt"
-             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23ffffff'>Cover</text></svg>"
+             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%23ffffff'>Cover</text></svg>"
              alt="Album Art"
              class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
 
-        <div class="flex-grow min-w-0 ml-4">
-          <h2 class="font-bold text-lg flex flex-wrap items-baseline gap-1 text-glow">
-            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[460px]">노래 제목</span>
-            <span id="trackArtist" class="opacity-90"></span>
+        <div class="flex-grow min-w-0 ml-3">
+          <h2 class="font-bold text-base flex flex-wrap items-baseline gap-1 text-glow">
+            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[360px]">노래 제목</span>
+            <span id="trackArtist" class="opacity-90 text-sm"></span>
           </h2>
-          <div class="flex items-center text-sm opacity-90 text-glow">
+          <div class="flex items-center text-xs opacity-90 text-glow">
             <span class="mr-2">SING 🎤</span>
             <p id="artistName">채널명</p>
           </div>
         </div>
 
-        <div class="flex items-center mt-3 md:mt-0">
-          <div class="flex items-center space-x-2 text-2xl">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+        <div class="flex items-center mt-2 md:mt-0">
+          <div class="flex items-center space-x-2 text-xl">
+            <!-- 아이콘도 살짝 축소 (w-6 h-6) -->
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
           </div>
-          <canvas id="waveformCanvas" class="ml-4"></canvas>
+          <canvas id="waveformCanvas" class="ml-3"></canvas>
         </div>
       </div>
     </div>
 
     <!-- 검색 -->
-    <section class="card p-4 mb-6">
+    <section class="card p-3 mb-4 search-wrap">
       <div class="flex w-full items-center gap-2">
         <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
-               class="flex-grow px-4 py-2 bg-white/90 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+               class="flex-grow px-3 py-2 bg-white/90 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition text-sm">
         <button id="searchButton"
-                class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">
+                class="shrink-0 bg-purple-600 text-white px-4 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95 text-sm">
           검색
         </button>
       </div>
     </section>
 
-    <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
-    <section>
-      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
+    <div id="status" class="text-center text-gray-500 mb-2 h-5 text-sm"></div>
+    <section class="search-wrap">
+      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 gap-3 hidden"></div>
     </section>
   </div>
 
   <!-- 설정 버튼 & 패널 -->
-  <div class="fixed bottom-6 right-6 z-50">
+  <div class="fixed bottom-5 right-5 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
-      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
 
-    <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white/90 p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
-      <!-- 표시 채널명 -->
+    <div id="settingsPanel" class="card absolute bottom-16 right-0 w-72 bg-white/90 p-5 rounded-2xl shadow-2xl origin-bottom-right space-y-5">
       <div>
         <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
         <div class="mt-1 flex items-center gap-2">
           <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
-                 class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+                 class="flex-1 min-w-0 h-9 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-sm">
+          <button id="applyDisplayName" class="h-9 px-3 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
         </div>
       </div>
 
-      <!-- 커버 이미지 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
-          <label class="cursor-pointer h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
+          <label class="cursor-pointer h-9 px-3 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
             <span>이미지 업로드</span>
             <input id="imageUpload" type="file" class="hidden" accept="image/*">
           </label>
-          <button id="revertCover" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+          <button id="revertCover" class="h-9 px-3 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
         </div>
       </div>
 
-      <!-- 카드 색상 (플레이어 그라데이션용) -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 색상</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
-          <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
-          <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
-          <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+          <input id="primaryColor" type="color" value="#A855F7" class="w-9 h-9 p-1 border-0 rounded-md cursor-pointer">
+          <input id="secondaryColor" type="color" value="#7C3AED" class="w-9 h-9 p-1 border-0 rounded-md cursor-pointer">
+          <button id="applyColors" class="h-9 px-3 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetColors" class="h-9 px-3 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
         </div>
       </div>
 
-      <!-- ✅ 배경 색상 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">배경 색상</label>
         <div class="mt-2 flex items-center gap-3">
-          <input id="bgColorPicker" type="color" value="#000000" class="w-10 h-10 p-1 border rounded-md cursor-pointer">
-          <button id="applyBgColor" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
-          <button id="resetBgColor" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
-        </div>
-        <p class="mt-1 text-xs text-gray-500">기본은 완전 투명입니다. 필요할 때만 색상을 적용하세요.</p>
-      </div>
-
-      <!-- 레이아웃 -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
-        <div class="mt-2 flex flex-row items-center gap-2">
-          <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
-          <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
+          <input id="bgColorPicker" type="color" value="#000000" class="w-9 h-9 p-1 border rounded-md cursor-pointer">
+          <button id="applyBgColor" class="h-9 px-3 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetBgColor" class="h-9 px-3 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
         </div>
       </div>
 
-      <!-- 파형 속도 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">파형 속도</label>
         <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
@@ -182,7 +174,7 @@
   </div>
 
   <script>
-    /* -------------------- DOM -------------------- */
+    /* DOM */
     const playerDiv = document.getElementById('player');
     const albumArtImg = document.getElementById('albumArt');
     const trackTitleSpan = document.getElementById('trackTitle');
@@ -205,8 +197,8 @@
     const secondaryColor = document.getElementById('secondaryColor');
     const applyColors = document.getElementById('applyColors');
     const resetColors = document.getElementById('resetColors');
-    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
-    const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+    const layoutHorizontalBtn = null; // 컴팩트에서는 레이아웃 토글 사용 안 함
+    const layoutVerticalBtn = null;
     const speedInput = document.getElementById('speedInput');
     const speedVal = document.getElementById('speedVal');
 
@@ -217,44 +209,21 @@
     const PLACEHOLDER = albumArtImg.src;
     let originalAlbumArtUrl = PLACEHOLDER;
 
-    /* -------------------- Helpers -------------------- */
+    /* Helpers */
     function setCssVar(name, value){ document.documentElement.style.setProperty(name, value); }
     function updatePlayerGradient(){ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); }
-    function setLayout(mode){
-      if (mode === 'vertical'){
-        playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
-      } else {
-        playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
-      }
-      updatePlayerGradient();
-      if (mode === 'vertical'){
-        layoutVerticalBtn.classList.replace('bg-gray-200','bg-purple-500');
-        layoutVerticalBtn.classList.replace('text-gray-700','text-white');
-        layoutHorizontalBtn.classList.replace('bg-purple-500','bg-gray-200');
-        layoutHorizontalBtn.classList.replace('text-white','text-gray-700');
-      } else {
-        layoutHorizontalBtn.classList.replace('bg-gray-200','bg-purple-500');
-        layoutHorizontalBtn.classList.replace('text-gray-700','text-white');
-        layoutVerticalBtn.classList.replace('bg-purple-500','bg-gray-200');
-        layoutVerticalBtn.classList.replace('text-white','text-gray-700');
-      }
-    }
 
-    /* ✅ 배경 적용/리셋 */
     function setBackgroundColor(color){
       document.documentElement.style.setProperty('background', color, 'important');
       document.documentElement.style.setProperty('background-color', color, 'important');
       document.body.style.setProperty('background', color, 'important');
       document.body.style.setProperty('background-color', color, 'important');
     }
-    function resetBackgroundToTransparent(){
-      setBackgroundColor('rgba(0,0,0,0)');
-    }
+    function resetBackgroundToTransparent(){ setBackgroundColor('rgba(0,0,0,0)'); }
 
-    /* -------------------- Settings interactions -------------------- */
+    /* Settings interactions */
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
     applyDisplayName.addEventListener('click', ()=>{ const v=displayNameInput.value.trim(); if(v) artistNameP.textContent=v; });
-
     imageUpload.addEventListener('change', e=>{
       const f=e.target.files[0]; if(!f) return;
       const r=new FileReader();
@@ -262,34 +231,30 @@
       r.readAsDataURL(f);
     });
     revertCover.addEventListener('click', ()=>{ albumArtImg.src=originalAlbumArtUrl || PLACEHOLDER; });
-
     applyColors.addEventListener('click', updatePlayerGradient);
     resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
 
-    /* 배경 색상 이벤트 */
-    applyBgColor.addEventListener('click', ()=>{
-      const color = bgColorPicker.value || '#000000';
-      setBackgroundColor(color);
-    });
+    applyBgColor.addEventListener('click', ()=>{ setBackgroundColor(bgColorPicker.value||'#000000'); });
     resetBgColor.addEventListener('click', resetBackgroundToTransparent);
 
-    layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
-    layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
-
-    /* -------------------- Waveform animation -------------------- */
+    /* Waveform (축소값에 맞춤) */
     function initWaveform(canvas, options = {}) {
       if (!canvas) return;
-      const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
+      const cfg = { barCount:16,gap:3,smoothing:0.1,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.9)',glowBlur:5,glowColor:'rgba(255,255,255,0.35)', ...options };
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const ctx = canvas.getContext('2d');
-      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
-      let lastW=0,lastH=0, startedAt=null;
-      const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
+      let prev=new Array(cfg.barCount).fill(0), target=new Array(cfg.barCount).fill(0);
+      let lastW=0,lastH=0, t0=null;
+      const ease=t=>0.5*(1-Math.cos(Math.PI*2*t));
       function resizeIfNeeded(){
-        const cssW=canvas.clientWidth||canvas.width||120, cssH=canvas.clientHeight||canvas.height||40;
-        if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+        const cssW=canvas.clientWidth||canvas.width||96, cssH=canvas.clientHeight||canvas.height||32;
+        if(cssW!==lastW||cssH!==lastH){
+          lastW=cssW; lastH=cssH;
+          canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr);
+          ctx.setTransform(dpr,0,0,dpr,0,0);
+        }
       }
-      function roundRect(ctx,x,y,w,h,r){
+      function rrect(ctx,x,y,w,h,r){
         const rr=Math.min(r,w*.5,h*.5); ctx.beginPath();
         ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
         ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
@@ -297,21 +262,21 @@
         ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath();
       }
       function render(ts){
-        if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
-        resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
+        if(!t0) t0=ts; const t=(ts-t0)/1000;
+        resizeIfNeeded(); const W=canvas.clientWidth||96, H=canvas.clientHeight||32;
         ctx.clearRect(0,0,W,H);
-        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+        const bw=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
         ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
         for(let i=0;i<cfg.barCount;i++){
-          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
-          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+          const base=ease((t*cfg.baseSpeedHz + i*0.18)%1);
+          const ripple=ease((t*cfg.rippleSpeedHz + i*0.35)%1);
           const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
           const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
-          targetHeights[i]=H*ratio;
-          const h=prevHeights[i]+(targetHeights[i]-prevHeights[i])*cfg.smoothing;
-          prevHeights[i]=h;
-          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
-          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+          target[i]=H*ratio;
+          const h=prev[i]+(target[i]-prev[i])*cfg.smoothing;
+          prev[i]=h;
+          const x=i*(bw+cfg.gap), y=H-h, r=Math.min(3,bw*0.35);
+          rrect(ctx,x,y,bw,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
         }
         ctx.shadowBlur=0; ctx.shadowColor='transparent';
         requestAnimationFrame(render);
@@ -319,7 +284,7 @@
       requestAnimationFrame(render);
       window.addEventListener('resize', resizeIfNeeded);
       return {
-        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz = 0.6 * mult; cfg.rippleSpeedHz = 1.2 * mult; }
+        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz=0.6*mult; cfg.rippleSpeedHz=1.2*mult; }
       };
     }
     const waveform = initWaveform(waveformCanvas);
@@ -330,11 +295,9 @@
     }
     speedInput.addEventListener('input', applySpeedUI);
 
-    /* -------------------- Search: Spotify 기본, 실패 시 iTunes 폴백 -------------------- */
-    // ⚠️ 배포용은 절대 프론트에 Secret 넣지 마세요!
+    /* Search (동일) */
     const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
     const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";
-
     let spotifyToken = null;
 
     async function getSpotifyToken(){
@@ -342,10 +305,8 @@
       try{
         const res = await fetch('https://accounts.spotify.com/api/token', {
           method:'POST',
-          headers:{
-            'Content-Type':'application/x-www-form-urlencoded',
-            'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET)
-          },
+          headers:{ 'Content-Type':'application/x-www-form-urlencoded',
+                    'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET) },
           body:'grant_type=client_credentials'
         });
         if(!res.ok) throw new Error('token fail');
@@ -357,33 +318,20 @@
     async function searchSpotify(q){
       if (!spotifyToken) spotifyToken = await getSpotifyToken();
       if (!spotifyToken) return null;
-
       const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
         headers:{'Authorization':`Bearer ${spotifyToken}`}
       });
-      if(res.status===401){
-        spotifyToken = await getSpotifyToken();
-        if (!spotifyToken) return null;
-        return searchSpotify(q);
-      }
+      if(res.status===401){ spotifyToken = await getSpotifyToken(); if(!spotifyToken) return null; return searchSpotify(q); }
       if(!res.ok) return null;
       const data=await res.json();
       const items = data?.tracks?.items || [];
-      return items.map(t=>({
-        name: t.name,
-        artists: t.artists?.map(a=>({name:a.name})) || [],
-        albumImage: (t.album?.images?.[1]?.url) || (t.album?.images?.[0]?.url) || null
-      }));
+      return items.map(t=>({ name:t.name, artists:t.artists?.map(a=>({name:a.name}))||[], albumImage:(t.album?.images?.[1]?.url)||(t.album?.images?.[0]?.url)||null }));
     }
 
     async function searchItunes(q){
       const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=24`);
       const data = await res.json();
-      return (data.results||[]).map(it=>({
-        name: it.trackName,
-        artists: [{name: it.artistName}],
-        albumImage: it.artworkUrl100 || it.artworkUrl60 || null
-      }));
+      return (data.results||[]).map(it=>({ name:it.trackName, artists:[{name:it.artistName}], albumImage:it.artworkUrl100||it.artworkUrl60||null }));
     }
 
     async function searchTracks(q){
@@ -391,9 +339,7 @@
       let list = await searchSpotify(q);
       if (!list || list.length===0){
         list = await searchItunes(q);
-        if (!CLIENT_ID || !CLIENT_SECRET){
-          statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.';
-        }
+        if (!CLIENT_ID || !CLIENT_SECRET){ statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.'; }
       }
       displayResults(list);
     }
@@ -408,16 +354,16 @@
 
       tracks.forEach(track=>{
         const card=document.createElement('div');
-        card.className='bg-white/90 rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+        card.className='bg-white/90 rounded-xl p-2 cursor-pointer hover:shadow-lg transition-shadow';
         const albumImage = track.albumImage || PLACEHOLDER;
         const artistNames = (track.artists||[]).map(a=>a.name).join(', ');
         card.innerHTML = `
           <div class="relative">
             <img src="${albumImage}" alt="${track.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
           </div>
-          <div class="mt-2 text-center">
+          <div class="mt-1 text-center">
             <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
-            <p class="text-xs text-gray-600 truncate">${artistNames}</p>
+            <p class="text-[11px] text-gray-600 truncate">${artistNames}</p>
           </div>`;
         card.addEventListener('click', ()=>{
           originalAlbumArtUrl = albumImage;
@@ -439,10 +385,9 @@
     searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
     searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
 
-    /* -------------------- Init -------------------- */
+    /* Init */
     updatePlayerGradient();
-    resetBackgroundToTransparent();   // 시작은 항상 투명
-    setLayout('horizontal');
+    resetBackgroundToTransparent();
     applySpeedUI();
   </script>
 </body>
