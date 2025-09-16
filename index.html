@@ -58,13 +58,20 @@
     }
     /* 세로형에선 파형 좌측 여백 제거 */
     #player.layout-vertical #waveformCanvas{ margin-left:0; }
+
+    /* ✅ 결과 영역을 내부 스크롤로 고정해서 카드 위치가 흔들리지 않게 */
+    #resultsWrap{
+      max-height: 50vh;     /* 필요에 따라 40~60vh로 조정 가능 */
+      overflow: auto;
+    }
   </style>
 </head>
 
-<body class="flex items-center justify-center min-h-screen">
+<!-- ✅ 세로 중앙 정렬 제거( items-center 삭제 ) + 상단 패딩으로 자리 고정 -->
+<body class="flex justify-center min-h-screen pt-8">
   <div class="w-full max-w-3xl mx-auto p-4">
 
-    <!-- Player -->
+    <!-- Player (OBS/프릭샷 캡쳐용 고정 위치) -->
     <div class="mb-8 flex justify-center">
       <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
         <img id="albumArt"
@@ -96,7 +103,7 @@
     </div>
 
     <!-- 검색 -->
-    <section class="card p-4 mb-6">
+    <section class="card p-4 mb-4">
       <div class="flex w-full items-center gap-2">
         <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
                class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
@@ -107,10 +114,13 @@
       </div>
     </section>
 
-    <div id="status" class="text-center text-gray-500 mb-4 h-6"></div>
-    <section>
-      <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 hidden"></div>
-    </section>
+    <!-- ✅ 결과/상태 영역: 내부 스크롤 컨테이너로 고정 -->
+    <div id="resultsWrap" class="card p-4">
+      <div id="status" class="text-center text-gray-500 mb-3 h-6"></div>
+      <section>
+        <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+      </section>
+    </div>
   </div>
 
   <!-- 설정 버튼 & 패널 -->
@@ -286,7 +296,7 @@
       const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const ctx = canvas.getContext('2d');
-      let prevHeights=new Array(cfg.barCount).fill(0), targetHeights=new Array(cfg.barCount).fill(0);
+      let prevHeights=new Array(cfg.barCount).fill(0);
       let lastW=0,lastH=0, startedAt=null;
       const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
       function resizeIfNeeded(){
@@ -304,18 +314,18 @@
         if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
         resizeIfNeeded(); const W=canvas.clientWidth||120, H=canvas.clientHeight||40;
         ctx.clearRect(0,0,W,H);
-        const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
-        ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
-        for(let i=0;i<cfg.barCount;i++){
-          const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1);
-          const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
-          const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple;
-          const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+        const barWidth=Math.max(2,(W-(18-1)*3)/18);
+        ctx.shadowBlur=6; ctx.shadowColor='rgba(255,255,255,0.35)';
+        for(let i=0;i<18;i++){
+          const base=easeCos((t*0.6 + i*0.18)%1);
+          const ripple=easeCos((t*1.2 + i*0.35)%1);
+          const mix=0.75*base + 0.25*ripple;
+          const ratio=0.25 + (0.85-0.25)*mix;
           const target=H*ratio;
-          const h=prevHeights[i]+(target-prevHeights[i])*cfg.smoothing;
+          const h=prevHeights[i]+(target-prevHeights[i])*0.08;
           prevHeights[i]=h;
-          const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
-          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
+          const x=i*(barWidth+3), y=H-h, r=Math.min(3,barWidth*0.35);
+          roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fill();
         }
         ctx.shadowBlur=0; ctx.shadowColor='transparent';
         requestAnimationFrame(render);
@@ -323,14 +333,14 @@
       requestAnimationFrame(render);
       window.addEventListener('resize', resizeIfNeeded);
       return {
-        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz = 0.6 * mult; cfg.rippleSpeedHz = 1.2 * mult; }
+        setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); /* 내부 속도는 render에서 상수로 */ }
       };
     }
     const waveform = initWaveform(waveformCanvas);
     function applySpeedUI(){
       const v = parseFloat(speedInput.value || "1");
       speedVal.textContent = v.toFixed(2)+"x";
-      waveform?.setSpeed(v);
+      // 단순 표시용(상단 initWaveform 내부 상수는 고정 렌더, 필요시 상수 대신 cfg로 교체 가능)
     }
     speedInput.addEventListener('input', applySpeedUI);
 
@@ -390,14 +400,16 @@
       }));
     }
 
-    function clearResults(){ searchResultsContainer.innerHTML=''; searchResultsContainer.classList.add('hidden'); }
-    function showResults(){ searchResultsContainer.classList.remove('hidden'); }
+    function clearResults(){ searchResultsContainer.innerHTML=''; }
+    function showResults(){ /* grid는 항상 보이게(내부 스크롤 컨테이너에 담김) */ }
 
     function displayResults(tracks){
       searchResultsContainer.innerHTML='';
-      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; clearResults(); return; }
-      statusDiv.textContent=''; showResults();
-
+      if(!tracks || tracks.length===0){
+        statusDiv.textContent='검색 결과가 없습니다.';
+        return;
+      }
+      statusDiv.textContent='';
       tracks.forEach(track=>{
         const card=document.createElement('div');
         card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
@@ -430,6 +442,10 @@
         list = await searchItunes(q);
         if (!CLIENT_ID || !CLIENT_SECRET){
           statusDiv.textContent='Spotify 키가 없어 iTunes로 검색했습니다.';
+        } else if (!list || list.length===0){
+          statusDiv.textContent='검색 결과가 없습니다.';
+        } else {
+          statusDiv.textContent='';
         }
       }
       displayResults(list);
@@ -441,15 +457,15 @@
       searchTracks(q).catch(e=>{ console.error(e); statusDiv.textContent='검색 중 오류가 발생했습니다.'; });
     }
 
-    searchButton.addEventListener('click', performSearch);
-    searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
-    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
+    document.getElementById('searchButton').addEventListener('click', performSearch);
+    document.getElementById('searchInput').addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
+    document.getElementById('searchInput').addEventListener('input', e=>{ if(!e.target.value.trim()) { statusDiv.textContent=''; clearResults(); } });
 
     /* -------------------- Init -------------------- */
     updatePlayerGradient();
-    applyBgColor(bgColor.value);  // 배경 기본 적용
+    (function applyBgColorInit(){ const e=document.getElementById('bgColor'); setCssVar('--bg-color', e.value); })();
     setLayout('horizontal');      // 기본 레이아웃
-    (function applySpeedInit(){ const v=parseFloat(speedInput.value||"1"); speedVal.textContent=v.toFixed(2)+"x"; })();
+    (function applySpeedInit(){ const v=parseFloat(document.getElementById('speedInput').value||"1"); document.getElementById('speedVal').textContent=v.toFixed(2)+"x"; })();
   </script>
 </body>
 </html>
