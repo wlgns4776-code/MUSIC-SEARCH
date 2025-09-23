@@ -14,21 +14,8 @@
       --title-size:18px;
       --meta-size:14px;
     }
-    html, body { 
-        margin:0; 
-        padding:0; 
-        background:var(--bg-color); 
-        /* body에 직접 min-h-screen을 적용하여 전체 높이 확보 */
-        min-height: 100vh; 
-    }
-    body{
-        font-family:'Noto Sans KR',sans-serif;
-        /* Flexbox를 사용하여 전체 페이지 콘텐츠 중앙 정렬 */
-        display: flex;
-        flex-direction: column; /* 세로 방향으로 정렬 */
-        align-items: center; /* 가로 중앙 정렬 */
-        padding-top: 2rem; /* pt-8과 동일 */
-    }
+    html, body { margin:0; padding:0; background:var(--bg-color); }
+    body{font-family:'Noto Sans KR',sans-serif}
     .card{ background:#fff; border-radius:20px; box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04); }
     #searchResults::-webkit-scrollbar{width:8px}
     #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
@@ -48,17 +35,13 @@
     @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
     #player.layout-vertical .player-controls{ display:flex; flex-direction:column; align-items:center; width:100%; gap:.5rem; }
     #player.layout-vertical #waveformCanvas{ margin-left:0; }
-    #resultsWrap{ 
-        max-height: 50vh; 
-        overflow: auto; 
-        /* 검색 결과가 없을 때도 최소 높이 유지 */
-        min-height: 50px; 
-    }
+    #resultsWrap{ max-height: 50vh; overflow: auto; }
     .player-buttons button { cursor: pointer; transition: transform 0.1s ease; }
     .player-buttons button:active { transform: scale(0.9); }
   </style>
 </head>
-<body class="">   <div class="w-full max-w-3xl mx-auto p-4">
+<body class="flex justify-center min-h-screen pt-8">
+  <div class="w-full max-w-3xl mx-auto p-4">
     <div class="mb-8 flex justify-center">
       <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
         <img id="albumArt" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23ffffff'>Cover</text></svg>" alt="Album Art" class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
@@ -317,17 +300,14 @@
   }
 
   /* -------------------- 검색 & 결과 표시 -------------------- */
-  function clearResults() { 
-    searchResultsContainer.innerHTML = ''; 
-    statusDiv.textContent = '';
-  }
+  function clearResults() { searchResultsContainer.innerHTML = ''; }
   function displayResults(tracks) {
-    clearResults(); // 기존 결과 지우기
+    clearResults();
     if (!tracks || tracks.length === 0) {
       if (statusDiv.textContent === 'YouTube 검색 중...') statusDiv.textContent = '검색 결과가 없습니다.';
       return;
     }
-    statusDiv.textContent = ''; // 검색 결과가 있으면 상태 메시지 지우기
+    statusDiv.textContent = '';
     currentPlaylist = tracks;
     tracks.forEach((track, index) => {
       const card = document.createElement('div');
@@ -347,18 +327,13 @@
   }
   async function searchTracks(q) {
     statusDiv.textContent = 'YouTube 검색 중...';
-    clearResults(); // 새 검색 전에 이전 결과 지우기
+    clearResults();
     const list = await searchYoutube(q);
     displayResults(list);
   }
   function performSearch() {
     const q = searchInput.value.trim();
-    if (q) {
-        searchTracks(q);
-    } else {
-        clearResults(); // 검색창이 비어있으면 결과 지우기
-        statusDiv.textContent = '검색어를 입력해 주세요.';
-    }
+    if (q) searchTracks(q);
   }
 
   /* -------------------- Helpers & UI 설정 -------------------- */
@@ -415,13 +390,6 @@
     // 검색
     searchButton.addEventListener('click', performSearch);
     searchInput.addEventListener('keyup', e => { if (e.key === 'Enter') performSearch(); });
-
-    // ✨ 수정된 부분: 검색창이 비워지면 결과 목록을 지웁니다.
-    searchInput.addEventListener('input', e => {
-      if (e.target.value.trim() === '') {
-        clearResults();
-      }
-    });
 
     // 플레이어 컨트롤
     playPauseBtn.addEventListener('click', togglePlayPause);
