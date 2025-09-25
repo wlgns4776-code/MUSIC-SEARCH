@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Music Search</title>
+  <title>Music Player</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -14,105 +14,92 @@
       --title-size:18px;
       --meta-size:14px;
     }
-    html, body{ margin:0; padding:0; background:var(--bg-color); }
-    body{ font-family:'Noto Sans KR',sans-serif; }
-
-    .card{ background:#fff; border-radius:20px;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
-
-    /* Player */
-    #player{
-      width:100%; color:#fff;
-      background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
-      border-radius:1rem;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
-    }
-    #player.layout-horizontal{
-      display:flex; align-items:center; gap:1rem;
-      max-width:960px; padding:1rem 1.25rem;
-    }
-    #player.layout-horizontal .album-art{ width:5rem; height:5rem; }
-    .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
-    .title-text{ font-size:var(--title-size); line-height:1.2; }
-    .meta-text{  font-size:var(--meta-size); }
-
-    /* Settings panel animation */
-    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);
-      transition:opacity .2s,transform .2s;pointer-events:none}
-    #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
-
-    /* Waveform */
-    #waveformCanvas{width:140px;height:44px}
-
-    /* Results */
-    #resultsWrap{ min-height:64px; }
-    #status{ min-height:1.5rem; }
-
-    /* Scrollbar when list grows */
+    html, body { margin:0; padding:0; background:var(--bg-color); }
+    body{font-family:'Noto Sans KR',sans-serif}
+    .card{ background:#fff; border-radius:20px; box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04); }
     #searchResults::-webkit-scrollbar{width:8px}
     #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb:hover{background:#A78BFA}
+    #player{ display:flex; color:#fff; background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary)); border-radius:1rem; box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05); }
+    #player.layout-horizontal{flex-direction:row;align-items:center;width:100%;max-width:920px}
+    #player.layout-horizontal .album-art{width:5rem;height:5rem}
+    #player.layout-vertical{flex-direction:column;align-items:center;width:320px}
+    #player.layout-vertical .album-art{width:10rem;height:10rem}
+    .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
+    .title-text{ font-size:var(--title-size); line-height:1.2; }
+    .meta-text{ font-size:var(--meta-size); }
+    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
+    #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
+    #waveformCanvas{width:120px;height:40px}
+    @media (min-width:768px){ #waveformCanvas{width:140px;height:44px} }
+    #player.layout-vertical .player-controls{ display:flex; flex-direction:column; align-items:center; width:100%; gap:.5rem; }
+    #player.layout-vertical #waveformCanvas{ margin-left:0; }
+    #resultsWrap{ max-height: 50vh; overflow: auto; }
+    .player-buttons button { cursor: pointer; transition: transform 0.1s ease; }
+    .player-buttons button:active { transform: scale(0.9); }
   </style>
 </head>
-
-<body class="min-h-screen">
-  <div class="w-full max-w-3xl mx-auto px-4 pt-10">
-    <!-- Player -->
-    <div class="mb-6">
-      <div id="player" class="layout-horizontal">
-        <img id="albumArt"
-             src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23ffffff'>Cover</text></svg>"
-             alt="Album Art"
-             class="album-art rounded-lg shadow-md flex-shrink-0">
-        <div class="flex-1 min-w-0">
+<body class="flex justify-center min-h-screen pt-8">
+  <div class="w-full max-w-3xl mx-auto p-4">
+    <div class="mb-8 flex justify-center">
+      <div id="player" class="p-4 transition-all duration-500 ease-in-out layout-horizontal">
+        <img id="albumArt" src="data:image/svg+xml;utf8,<?xml version='1.0' encoding='UTF-8'?><svg xmlns='http://www.w3.org/2000/svg' width='80' height='80'><rect width='100%' height='100%' rx='10' fill='%236d28d9'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%23ffffff'>Cover</text></svg>" alt="Album Art" class="album-art rounded-lg shadow-md flex-shrink-0 transition-all">
+        <div class="flex-grow min-w-0 ml-4">
           <h2 class="font-bold flex flex-wrap items-baseline gap-1 text-glow title-text">
-            <span id="trackTitle" class="truncate">노래 제목</span>
+            <span id="trackTitle" class="truncate max-w-[60vw] sm:max-w-[460px]">노래 제목</span>
             <span id="trackArtist" class="opacity-90"></span>
           </h2>
           <div class="flex items-center opacity-90 text-glow meta-text">
-            <span class="mr-2">SING 🎤</span>
-            <p id="artistName">채널명</p>
+            <span class="mr-2">SING 🎤</span><p id="artistName">채널명</p>
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2 text-2xl">
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
-            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+        <div class="player-controls flex items-center mt-3 md:mt-0">
+          <div class="player-buttons flex items-center space-x-2 text-2xl">
+            <button id="prevBtn" aria-label="Previous">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1H4z"></path><path d="M15.25 14.5a1 1 0 01-1.5.866l-6-4.5a1 1 0 010-1.732l6-4.5a1 1 0 011.5.866v8.5z"></path></svg>
+            </button>
+            <button id="playPauseBtn" aria-label="Play/Pause">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20" id="playIcon"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+              <svg class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 20 20" id="pauseIcon"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            </button>
+            <button id="nextBtn" aria-label="Next">
+              <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path d="M15 4a1 1 0 00-1 1v10a1 1 0 001 1h1a1 1 0 001-1V5a1 1 0 00-1-1h-1z"></path><path d="M4.75 14.5a1 1 0 001.5.866l6-4.5a1 1 0 000-1.732l-6-4.5a1 1 0 00-1.5.866v8.5z"></path></svg>
+            </button>
           </div>
-          <canvas id="waveformCanvas"></canvas>
+          <canvas id="waveformCanvas" class="ml-4"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Search -->
-    <section class="card p-3 mb-4">
-      <div class="flex w-full items-center gap-0">
-        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..."
-               class="flex-grow px-4 h-11 bg-white border border-gray-200 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
-        <button id="searchButton"
-                class="shrink-0 bg-purple-600 text-white px-4 h-11 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
-          검색
-        </button>
+    <section class="card p-4 mb-4">
+      <div class="flex w-full items-center gap-2">
+        <input id="searchInput" type="text" placeholder="아티스트나 곡명을 검색하세요..." class="flex-grow px-4 py-2 bg-white border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition">
+        <button id="searchButton" class="shrink-0 bg-purple-600 text-white px-5 py-2 rounded-r-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-transform active:scale-95">검색</button>
       </div>
     </section>
 
-    <!-- Results -->
     <div id="resultsWrap" class="card p-4">
-      <div id="status" class="text-center text-gray-500 mb-2"></div>
+      <div id="status" class="text-center text-gray-500 mb-3 h-6"></div>
       <section><div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div></section>
     </div>
   </div>
 
-  <!-- Settings (FAB) -->
+  <!-- Settings FAB -->
   <div class="fixed bottom-6 right-6 z-50">
     <button id="settingsIconBtn" class="bg-purple-600 text-white rounded-full p-3 shadow-lg hover:bg-purple-700 transition transform hover:scale-110 focus:outline-none" aria-label="설정">
       <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
     </button>
 
     <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
-      <!-- 커버 이미지 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
+        <div class="mt-1 flex items-center gap-2">
+          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요" class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
+          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+        </div>
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
@@ -124,7 +111,6 @@
         </div>
       </div>
 
-      <!-- 카드 색상 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 색상</label>
         <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
@@ -135,7 +121,6 @@
         </div>
       </div>
 
-      <!-- 배경 색상 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">배경 색상</label>
         <div class="mt-2 flex items-center gap-2">
@@ -145,7 +130,6 @@
         </div>
       </div>
 
-      <!-- 카드 레이아웃 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
         <div class="mt-2 flex flex-row items-center gap-2">
@@ -154,261 +138,353 @@
         </div>
       </div>
 
-      <!-- 파형 속도 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">볼륨 조절</label>
+        <div class="flex items-center justify-between text-xs text-gray-500 mb-1"><span>🔊</span><span id="volumeVal">100%</span></div>
+        <input id="volumeSlider" type="range" min="0" max="100" step="1" value="100" class="w-full">
+      </div>
+
       <div>
         <label class="block text-sm font-medium text-gray-700">파형 속도</label>
         <input id="speedInput" type="range" min="0.4" max="2" step="0.05" value="1" class="w-full">
         <div class="flex justify-between text-xs text-gray-500"><span>느리게</span><span id="speedVal">1.00x</span><span>빠르게</span></div>
       </div>
 
-      <!-- 텍스트 크기 -->
       <div>
         <label class="block text-sm font-medium text-gray-700">텍스트 크기</label>
         <div class="mt-2 space-y-3">
           <div>
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>제목 크기</span><span id="titleSizeVal">18px</span>
-            </div>
+            <div class="flex items-center justify-between text-xs text-gray-500 mb-1"><span>제목 크기</span><span id="titleSizeVal">18px</span></div>
             <input id="titleSize" type="range" min="14" max="36" step="1" value="18" class="w-full">
           </div>
           <div>
-            <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-              <span>정보 크기 (가수/채널)</span><span id="metaSizeVal">14px</span>
-            </div>
+            <div class="flex items-center justify-between text-xs text-gray-500 mb-1"><span>정보 크기 (가수/채널)</span><span id="metaSizeVal">14px</span></div>
             <input id="metaSize" type="range" min="10" max="24" step="1" value="14" class="w-full">
           </div>
-          <button id="resetTextSize" class="h-9 px-3 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+          <div class="flex gap-2">
+            <button id="resetTextSize" class="h-9 px-3 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script>
-    /* ------- DOM ------- */
-    const playerDiv = document.getElementById('player');
-    const albumArtImg = document.getElementById('albumArt');
-    const trackTitleSpan = document.getElementById('trackTitle');
-    const trackArtistSpan = document.getElementById('trackArtist');
-    const artistNameP = document.getElementById('artistName');
-    const waveformCanvas = document.getElementById('waveformCanvas');
+  <!-- 재생용 오디오(미리듣기) -->
+  <audio id="audio" crossorigin="anonymous"></audio>
 
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const statusDiv = document.getElementById('status');
-    const searchResultsContainer = document.getElementById('searchResults');
+<script>
+  /* -------------------- DOM & 전역 변수 -------------------- */
+  const playerDiv = document.getElementById('player');
+  const albumArtImg = document.getElementById('albumArt');
+  const trackTitleSpan = document.getElementById('trackTitle');
+  const trackArtistSpan = document.getElementById('trackArtist');
+  const artistNameP = document.getElementById('artistName');
+  const waveformCanvas = document.getElementById('waveformCanvas');
+  const searchInput = document.getElementById('searchInput');
+  const searchButton = document.getElementById('searchButton');
+  const statusDiv = document.getElementById('status');
+  const searchResultsContainer = document.getElementById('searchResults');
+  const settingsIconBtn = document.getElementById('settingsIconBtn');
+  const settingsPanel = document.getElementById('settingsPanel');
+  const displayNameInput = document.getElementById('displayNameInput');
+  const applyDisplayName = document.getElementById('applyDisplayName');
+  const imageUpload = document.getElementById('imageUpload');
+  const revertCover = document.getElementById('revertCover');
+  const primaryColor = document.getElementById('primaryColor');
+  const secondaryColor = document.getElementById('secondaryColor');
+  const applyColors = document.getElementById('applyColors');
+  const resetColors = document.getElementById('resetColors');
+  const bgColor = document.getElementById('bgColor');
+  const applyBg = document.getElementById('applyBg');
+  const resetBg = document.getElementById('resetBg');
+  const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+  const layoutVerticalBtn = document.getElementById('layoutVerticalBtn');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const volumeVal = document.getElementById('volumeVal');
+  const speedInput = document.getElementById('speedInput');
+  const speedVal = document.getElementById('speedVal');
+  const titleSize = document.getElementById('titleSize');
+  const metaSize = document.getElementById('metaSize');
+  const titleSizeVal = document.getElementById('titleSizeVal');
+  const metaSizeVal = document.getElementById('metaSizeVal');
+  const resetTextSize = document.getElementById('resetTextSize');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const playIcon = document.getElementById('playIcon');
+  const pauseIcon = document.getElementById('pauseIcon');
+  const audio = document.getElementById('audio');
+  const PLACEHOLDER = albumArtImg.src;
 
-    const settingsIconBtn = document.getElementById('settingsIconBtn');
-    const settingsPanel   = document.getElementById('settingsPanel');
+  let originalAlbumArtUrl = PLACEHOLDER;
+  let userCoverUrl = null;
+  let useUserCover = false;
 
-    // --- Settings controls (re-added) ---
-    const imageUpload = document.getElementById('imageUpload');
-    const revertCover = document.getElementById('revertCover');
-    const primaryColor = document.getElementById('primaryColor');
-    const secondaryColor = document.getElementById('secondaryColor');
-    const applyColors = document.getElementById('applyColors');
-    const resetColors = document.getElementById('resetColors');
-    const bgColor = document.getElementById('bgColor');
-    const applyBg = document.getElementById('applyBg');
-    const resetBg = document.getElementById('resetBg');
-    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
-    const layoutVerticalBtn   = document.getElementById('layoutVerticalBtn');
+  let currentPlaylist = [];
+  let currentTrackIndex = -1;
+  let isPlaying = false;
+  let waveform;
 
-    const speedInput = document.getElementById('speedInput');
-    const speedVal   = document.getElementById('speedVal');
-    const titleSize = document.getElementById('titleSize');
-    const metaSize  = document.getElementById('metaSize');
-    const titleSizeVal = document.getElementById('titleSizeVal');
-    const metaSizeVal  = document.getElementById('metaSizeVal');
-    const resetTextSize= document.getElementById('resetTextSize');
+  /* -------------------- Spotify API 설정 -------------------- */
+  // 👉 여기에 본인 Spotify Client ID/Secret을 넣으세요
+  const CLIENT_ID = '13ada5c13a834887b16d181b5730a8b3';
+  const CLIENT_SECRET = 'e29f437d6c3d46509926b78b0fd885fb';
 
-    /* ------- State ------- */
-    const PLACEHOLDER = albumArtImg.src;
-    let originalAlbumArtUrl = PLACEHOLDER;
-    let userCoverUrl = null;
-    let useUserCover = false;
-
-    /* ------- Helpers ------- */
-    const setCssVar = (n,v)=>document.documentElement.style.setProperty(n,v);
-    const updatePlayerGradient = ()=>{ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); };
-    const applyTitleSize = v => { setCssVar('--title-size', v+'px'); titleSizeVal.textContent=v+'px'; };
-    const applyMetaSize  = v => { setCssVar('--meta-size',  v+'px'); metaSizeVal.textContent=v+'px'; };
-    const applyBgColor   = v => setCssVar('--bg-color', v);
-
-    function setLayout(mode){
-      if(mode==='vertical'){
-        playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
-      }else{
-        playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
-      }
-      // 버튼 토글 색상
-      const on = (btn)=>{ btn.classList.remove('bg-gray-200','text-gray-700'); btn.classList.add('bg-purple-500','text-white'); };
-      const off= (btn)=>{ btn.classList.remove('bg-purple-500','text-white'); btn.classList.add('bg-gray-200','text-gray-700'); };
-      if(mode==='vertical'){ on(layoutVerticalBtn); off(layoutHorizontalBtn); }
-      else{ on(layoutHorizontalBtn); off(layoutVerticalBtn); }
-      updatePlayerGradient();
+  let spotifyToken = null;
+  async function getSpotifyToken(){
+    if(!CLIENT_ID || !CLIENT_SECRET){ statusDiv.textContent='Spotify Client ID/Secret을 설정하세요.'; return null; }
+    try{
+      const res = await fetch('https://accounts.spotify.com/api/token',{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/x-www-form-urlencoded',
+          'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET)
+        },
+        body:'grant_type=client_credentials'
+      });
+      if(!res.ok) throw new Error('Token error');
+      const data = await res.json();
+      return data.access_token || null;
+    }catch(e){
+      console.error(e);
+      statusDiv.textContent='Spotify 토큰 발급 실패';
+      return null;
     }
+  }
 
-    /* ------- Settings interactions ------- */
-    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
-
-    // 커버 업로드/복원
-    imageUpload?.addEventListener('change', e=>{
-      const f=e.target.files?.[0]; if(!f) return;
-      const r=new FileReader();
-      r.onload=ev=>{ userCoverUrl=ev.target.result; useUserCover=true; albumArtImg.src=userCoverUrl; };
-      r.readAsDataURL(f);
+  async function searchSpotify(q){
+    if(!spotifyToken) spotifyToken = await getSpotifyToken();
+    if(!spotifyToken) return [];
+    const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
+      headers:{ 'Authorization':`Bearer ${spotifyToken}` }
     });
-    revertCover?.addEventListener('click', ()=>{ useUserCover=false; userCoverUrl=null; albumArtImg.src = originalAlbumArtUrl || PLACEHOLDER; });
+    if(res.status===401){ // 토큰 만료
+      spotifyToken = await getSpotifyToken();
+      if(!spotifyToken) return [];
+      return searchSpotify(q);
+    }
+    if(!res.ok){ statusDiv.textContent='검색 오류'; return []; }
+    const data = await res.json();
+    const items = data?.tracks?.items || [];
+    return items.map(t=>({
+      id: t.id,
+      name: t.name,
+      preview_url: t.preview_url || null, // 30초 미리듣기
+      artists: (t.artists||[]).map(a=>({name:a.name})),
+      albumImage: (t.album?.images?.[1]?.url) || (t.album?.images?.[0]?.url) || PLACEHOLDER
+    }));
+  }
 
-    // 색상/배경
-    applyColors?.addEventListener('click', updatePlayerGradient);
-    resetColors?.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
-    applyBg?.addEventListener('click', ()=> applyBgColor(bgColor.value || '#ffffff'));
-    resetBg?.addEventListener('click', ()=>{ bgColor.value='#ffffff'; applyBgColor('#ffffff'); });
+  /* -------------------- 재생 컨트롤 (HTMLAudio + preview_url) -------------------- */
+  function loadAndPlay(track){
+    // UI 세팅
+    originalAlbumArtUrl = track.albumImage;
+    if(!useUserCover) albumArtImg.src = track.albumImage;
+    trackTitleSpan.textContent = track.name || '노래 제목';
+    const names = (track.artists||[]).map(a=>a.name).join(', ');
+    trackArtistSpan.textContent = names ? `- ${names}` : '';
 
-    // 레이아웃
-    layoutHorizontalBtn?.addEventListener('click', ()=> setLayout('horizontal'));
-    layoutVerticalBtn?.addEventListener('click', ()=> setLayout('vertical'));
+    if(!track.preview_url){
+      isPlaying = false;
+      playIcon.classList.remove('hidden');
+      pauseIcon.classList.add('hidden');
+      statusDiv.textContent = '이 곡은 미리듣기(preview)가 없습니다.';
+      audio.pause();
+      audio.removeAttribute('src');
+      return;
+    }
 
-    /* ------- Waveform ------- */
-    function initWaveform(canvas){
-      if(!canvas) return null;
-      const ctx = canvas.getContext('2d');
-      let t0=null, prev=new Array(18).fill(0), speed=1;
-      const ease=t=>0.5*(1-Math.cos(Math.PI*2*t));
-      const dpr=Math.max(1, window.devicePixelRatio||1);
-      function resize(){
-        const W = canvas.clientWidth||140, H = canvas.clientHeight||44;
-        canvas.width = Math.floor(W*dpr); canvas.height=Math.floor(H*dpr);
-        ctx.setTransform(dpr,0,0,dpr,0,0);
+    statusDiv.textContent = '';
+    audio.src = track.preview_url;
+    audio.play().then(()=>{
+      isPlaying = true;
+      playIcon.classList.add('hidden');
+      pauseIcon.classList.remove('hidden');
+    }).catch(err=>{
+      console.error(err);
+      statusDiv.textContent = '재생 실패 (브라우저 정책/네트워크)';
+    });
+  }
+
+  function playTrack(index){
+    if(index<0 || index>=currentPlaylist.length) return;
+    currentTrackIndex = index;
+    loadAndPlay(currentPlaylist[currentTrackIndex]);
+  }
+
+  function togglePlayPause(){
+    if(currentTrackIndex===-1) return;
+    if(isPlaying){ audio.pause(); isPlaying=false; playIcon.classList.remove('hidden'); pauseIcon.classList.add('hidden'); }
+    else { audio.play().then(()=>{ isPlaying=true; playIcon.classList.add('hidden'); pauseIcon.classList.remove('hidden'); }).catch(()=>{}); }
+  }
+
+  function playNext(){
+    if(!currentPlaylist.length) return;
+    playTrack((currentTrackIndex+1)%currentPlaylist.length);
+  }
+  function playPrev(){
+    if(!currentPlaylist.length) return;
+    playTrack((currentTrackIndex-1+currentPlaylist.length)%currentPlaylist.length);
+  }
+
+  // 오디오 이벤트(끝나면 다음곡, 볼륨 반영)
+  audio.addEventListener('ended', playNext);
+  audio.volume = 1;
+
+  /* -------------------- 검색 & 결과 표시 -------------------- */
+  function clearResults(){ searchResultsContainer.innerHTML=''; }
+  function displayResults(tracks){
+    clearResults();
+    if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; return; }
+    statusDiv.textContent='';
+    currentPlaylist = tracks;
+    tracks.forEach((track, idx)=>{
+      const card=document.createElement('div');
+      card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
+      const artistNames=(track.artists||[]).map(a=>a.name).join(', ');
+      card.innerHTML = `
+        <div class="relative">
+          <img src="${track.albumImage}" alt="${track.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
+        </div>
+        <div class="mt-2 text-center">
+          <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
+          <p class="text-xs text-gray-600 truncate">${artistNames}${track.preview_url ? '' : ' · (미리듣기 없음)'}</p>
+        </div>`;
+      card.addEventListener('click', ()=> playTrack(idx));
+      searchResultsContainer.appendChild(card);
+    });
+  }
+
+  async function searchTracks(q){
+    statusDiv.textContent='Spotify 검색 중...';
+    clearResults();
+    const list = await searchSpotify(q);
+    displayResults(list);
+  }
+
+  function performSearch(){
+    const q = searchInput.value.trim();
+    if(q) searchTracks(q);
+  }
+
+  /* -------------------- Helpers & UI 설정 -------------------- */
+  function setCssVar(name, value){ document.documentElement.style.setProperty(name, value); }
+  function setLayout(mode){
+    playerDiv.classList.toggle('layout-horizontal', mode==='horizontal');
+    playerDiv.classList.toggle('layout-vertical',   mode==='vertical');
+    layoutHorizontalBtn.classList.toggle('bg-purple-500', mode==='horizontal');
+    layoutHorizontalBtn.classList.toggle('text-white',    mode==='horizontal');
+    layoutHorizontalBtn.classList.toggle('bg-gray-200',   mode==='vertical');
+    layoutHorizontalBtn.classList.toggle('text-gray-700', mode==='vertical');
+    layoutVerticalBtn.classList.toggle('bg-purple-500',   mode==='vertical');
+    layoutVerticalBtn.classList.toggle('text-white',      mode==='vertical');
+    layoutVerticalBtn.classList.toggle('bg-gray-200',     mode==='horizontal');
+    layoutVerticalBtn.classList.toggle('text-gray-700',   mode==='horizontal');
+  }
+
+  /* -------------------- 파형 -------------------- */
+  function initWaveform(canvas, options = {}) {
+    if (!canvas) return;
+    const cfg = { barCount:18,gap:3,smoothing:0.08,baseSpeedHz:0.6,rippleSpeedHz:1.2,baseWeight:0.75,rippleWeight:0.25,minRatio:0.25,maxRatio:0.85,fillStyle:'rgba(255,255,255,0.88)',glowBlur:6,glowColor:'rgba(255,255,255,0.35)', ...options };
+    const dpr = Math.max(1, window.devicePixelRatio || 1);
+    const ctx = canvas.getContext('2d');
+    let prevHeights=new Array(cfg.barCount).fill(0);
+    let lastW=0,lastH=0, startedAt=null;
+    const easeCos=t=>0.5*(1-Math.cos(Math.PI*2*t));
+    function resizeIfNeeded(){
+      const cssW=canvas.clientWidth||120, cssH=canvas.clientHeight||40;
+      if(cssW!==lastW||cssH!==lastH){ lastW=cssW; lastH=cssH; canvas.width=Math.floor(cssW*dpr); canvas.height=Math.floor(cssH*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); }
+    }
+    function roundRect(ctx,x,y,w,h,r){ const rr=Math.min(r,w*.5,h*.5); ctx.beginPath(); ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr); ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h); ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr); ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y); ctx.closePath(); }
+    function render(ts){
+      if(!startedAt) startedAt=ts; const t=(ts-startedAt)/1000;
+      resizeIfNeeded(); const W=canvas.clientWidth, H=canvas.clientHeight;
+      ctx.clearRect(0,0,W,H);
+      const barWidth=Math.max(2,(W-(cfg.barCount-1)*cfg.gap)/cfg.barCount);
+      ctx.shadowBlur=cfg.glowBlur; ctx.shadowColor=cfg.glowColor;
+      for(let i=0;i<cfg.barCount;i++){
+        const base=easeCos((t*cfg.baseSpeedHz + i*0.18)%1); const ripple=easeCos((t*cfg.rippleSpeedHz + i*0.35)%1);
+        const mix=cfg.baseWeight*base + cfg.rippleWeight*ripple; const ratio=cfg.minRatio + (cfg.maxRatio-cfg.minRatio)*mix;
+        const target=H*ratio; const h=prevHeights[i]+(target-prevHeights[i])*cfg.smoothing; prevHeights[i]=h;
+        const x=i*(barWidth+cfg.gap), y=H-h, r=Math.min(3,barWidth*0.35);
+        roundRect(ctx,x,y,barWidth,h,r); ctx.fillStyle=cfg.fillStyle; ctx.fill();
       }
-      window.addEventListener('resize', resize); resize();
-      function rr(ctx,x,y,w,h,r){const a=Math.min(r,w*.5,h*.5);ctx.beginPath();
-        ctx.moveTo(x+a,y);ctx.lineTo(x+w-a,y);ctx.quadraticCurveTo(x+w,y,x+w,y+a);
-        ctx.lineTo(x+w,y+h-a);ctx.quadraticCurveTo(x+w,y+h,x+w-a,y+h);
-        ctx.lineTo(x+a,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-a);
-        ctx.lineTo(x,y+a);ctx.quadraticCurveTo(x,y,x+a,y);ctx.closePath();}
-      function frame(ts){
-        if(!t0) t0=ts; const t=(ts-t0)/1000;
-        const W=canvas.clientWidth||140, H=canvas.clientHeight||44;
-        ctx.clearRect(0,0,W,H);
-        const bars=18, gap=3, w=Math.max(2,(W-(bars-1)*gap)/bars);
-        ctx.shadowBlur=6; ctx.shadowColor='rgba(255,255,255,0.35)';
-        for(let i=0;i<bars;i++){
-          const base=ease((t*0.6*speed + i*0.18)%1);
-          const rip =ease((t*1.2*speed + i*0.35)%1);
-          const mix =0.75*base+0.25*rip;
-          const ratio=0.25+(0.85-0.25)*mix;
-          const target=H*ratio;
-          const h=prev[i]+(target-prev[i])*0.08; prev[i]=h;
-          const x=i*(w+gap), y=H-h, r=Math.min(3,w*0.35);
-          rr(ctx,x,y,w,h,r); ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fill();
-        }
-        ctx.shadowBlur=0; requestAnimationFrame(frame);
-      }
-      requestAnimationFrame(frame);
-      return { setSpeed:(m)=>{ speed=Math.max(0.1,Math.min(5,m||1)); } };
+      ctx.shadowBlur=0; ctx.shadowColor='transparent';
+      requestAnimationFrame(render);
     }
-    const waveform = initWaveform(waveformCanvas);
-    function applySpeedUI(){ const v=parseFloat(speedInput.value||"1"); speedVal.textContent=v.toFixed(2)+"x"; waveform?.setSpeed(v); }
-    speedInput.addEventListener('input', applySpeedUI);
+    requestAnimationFrame(render);
+    return { setSpeed(mult){ mult=Math.max(0.1, Math.min(5, mult||1)); cfg.baseSpeedHz = 0.6 * mult; cfg.rippleSpeedHz = 1.2 * mult; } };
+  }
 
-    /* ------- Search (Spotify → iTunes fallback) ------- */
-    const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
-    const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";
-    let spotifyToken=null;
-
-    async function getSpotifyToken(){
-      try{
-        const res = await fetch('https://accounts.spotify.com/api/token', {
-          method:'POST',
-          headers:{
-            'Content-Type':'application/x-www-form-urlencoded',
-            'Authorization':'Basic '+btoa(CLIENT_ID+':'+CLIENT_SECRET)
-          },
-          body:'grant_type=client_credentials'
-        });
-        if(!res.ok) throw new Error('token fail');
-        const data=await res.json();
-        return data.access_token || null;
-      }catch(e){ console.warn('Spotify 토큰 실패:', e); return null; }
-    }
-    async function searchSpotify(q){
-      if(!spotifyToken) spotifyToken = await getSpotifyToken();
-      if(!spotifyToken) return null;
-      const res=await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(q)}&type=track&limit=24`,{
-        headers:{'Authorization':`Bearer ${spotifyToken}`}
-      });
-      if(res.status===401){ spotifyToken=null; return searchSpotify(q); }
-      if(!res.ok) return null;
-      const data=await res.json();
-      return (data?.tracks?.items||[]).map(t=>({
-        name:t.name,
-        artists:(t.artists||[]).map(a=>({name:a.name})),
-        albumImage:(t.album?.images?.[1]?.url)||(t.album?.images?.[0]?.url)||null
-      }));
-    }
-    async function searchItunes(q){
-      const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=24`);
-      const data=await res.json();
-      return (data.results||[]).map(it=>({
-        name:it.trackName,
-        artists:[{name:it.artistName}],
-        albumImage:it.artworkUrl100||it.artworkUrl60||null
-      }));
-    }
-    function clearResults(){ searchResultsContainer.innerHTML=''; }
-    function displayResults(tracks){
-      clearResults();
-      if(!tracks || tracks.length===0){ statusDiv.textContent='검색 결과가 없습니다.'; return; }
-      statusDiv.textContent='';
-      tracks.forEach(track=>{
-        const card=document.createElement('div');
-        card.className='bg-white rounded-xl p-3 cursor-pointer hover:shadow-lg transition-shadow';
-        const img = track.albumImage || PLACEHOLDER;
-        const names=(track.artists||[]).map(a=>a.name).join(', ');
-        card.innerHTML=`
-          <div class="relative">
-            <img src="${img}" alt="${track.name}" class="w-full rounded-lg shadow-sm aspect-square object-cover">
-          </div>
-          <div class="mt-2 text-center">
-            <p class="font-bold text-gray-900 truncate text-sm">${track.name}</p>
-            <p class="text-xs text-gray-600 truncate">${names}</p>
-          </div>`;
-        card.addEventListener('click', ()=>{
-          originalAlbumArtUrl = img;
-          if(!useUserCover) albumArtImg.src = img;
-          trackTitleSpan.textContent = track.name || '노래 제목';
-          trackArtistSpan.textContent = names ? `- ${names}` : '';
-        });
-        searchResultsContainer.appendChild(card);
-      });
-    }
-    async function searchTracks(q){
-      statusDiv.textContent='검색 중...'; clearResults();
-      let list = await searchSpotify(q);
-      if(!list || list.length===0){
-        list = await searchItunes(q);
-        statusDiv.textContent = (!list || list.length===0) ? '검색 결과가 없습니다.' : '';
-      }
-      displayResults(list);
-    }
-    function performSearch(){
-      const q = searchInput.value.trim();
-      if(!q){ statusDiv.textContent=''; clearResults(); return; }
-      searchTracks(q).catch(()=> statusDiv.textContent='검색 중 오류가 발생했습니다.');
-    }
+  /* -------------------- 초기화 -------------------- */
+  function initialize(){
+    // 검색
     searchButton.addEventListener('click', performSearch);
     searchInput.addEventListener('keyup', e=>{ if(e.key==='Enter') performSearch(); });
-    searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()){ statusDiv.textContent=''; clearResults(); } });
 
-    /* ------- Init ------- */
-    updatePlayerGradient();
-    applySpeedUI();
-    applyTitleSize(titleSize.value);
-    applyMetaSize(metaSize.value);
-    applyBgColor(bgColor.value);
-    setLayout('horizontal'); // 기본 가로형
-  </script>
+    // 재생 컨트롤
+    playPauseBtn.addEventListener('click', togglePlayPause);
+    nextBtn.addEventListener('click', playNext);
+    prevBtn.addEventListener('click', playPrev);
+
+    // 설정 패널
+    settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+    applyDisplayName.addEventListener('click', ()=>{ if(displayNameInput.value.trim()) artistNameP.textContent = displayNameInput.value.trim(); });
+
+    imageUpload.addEventListener('change', e=>{
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload = ev=>{ userCoverUrl=ev.target.result; useUserCover=true; albumArtImg.src=userCoverUrl; };
+      reader.readAsDataURL(file);
+    });
+    revertCover.addEventListener('click', ()=>{ useUserCover=false; userCoverUrl=null; albumArtImg.src = originalAlbumArtUrl || PLACEHOLDER; });
+
+    applyColors.addEventListener('click', ()=>{ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); });
+    resetColors.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; applyColors.click(); });
+
+    applyBg.addEventListener('click', ()=> setCssVar('--bg-color', bgColor.value));
+    resetBg.addEventListener('click', ()=>{ bgColor.value='#ffffff'; applyBg.click(); });
+
+    layoutHorizontalBtn.addEventListener('click', ()=> setLayout('horizontal'));
+    layoutVerticalBtn.addEventListener('click', ()=> setLayout('vertical'));
+
+    volumeSlider.addEventListener('input', e=>{
+      const v = Number(e.target.value);
+      volumeVal.textContent = `${v}%`;
+      audio.volume = Math.max(0, Math.min(1, v/100));
+    });
+
+    speedInput.addEventListener('input', e=>{
+      const s = parseFloat(e.target.value);
+      speedVal.textContent = `${s.toFixed(2)}x`;
+      waveform?.setSpeed(s);
+    });
+
+    titleSize.addEventListener('input', e=>{
+      const size = `${e.target.value}px`;
+      titleSizeVal.textContent = size; setCssVar('--title-size', size);
+    });
+    metaSize.addEventListener('input', e=>{
+      const size = `${e.target.value}px`;
+      metaSizeVal.textContent = size; setCssVar('--meta-size', size);
+    });
+    resetTextSize.addEventListener('click', ()=>{
+      titleSize.value=18; metaSize.value=14;
+      titleSize.dispatchEvent(new Event('input'));
+      metaSize.dispatchEvent(new Event('input'));
+    });
+
+    // 초기값
+    setLayout('horizontal');
+    waveform = initWaveform(waveformCanvas);
+    speedInput.dispatchEvent(new Event('input'));
+    titleSize.dispatchEvent(new Event('input'));
+    metaSize.dispatchEvent(new Event('input'));
+    applyColors.click();
+    applyBg.click();
+  }
+
+  initialize();
+</script>
 </body>
 </html>
