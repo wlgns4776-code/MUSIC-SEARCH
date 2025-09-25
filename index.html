@@ -14,47 +14,41 @@
       --title-size:18px;
       --meta-size:14px;
     }
-
     html, body{ margin:0; padding:0; background:var(--bg-color); }
     body{ font-family:'Noto Sans KR',sans-serif; }
 
-    .card{
-      background:#fff;
-      border-radius:20px;
-      box-shadow:0 10px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04);
-    }
+    .card{ background:#fff; border-radius:20px;
+      box-shadow:0 10px 25px -5px rgba(0,0,0,.1), 0 10px 10px -5px rgba(0,0,0,.04); }
 
     /* Player */
     #player{
-      width:100%;
-      color:#fff;
+      width:100%; color:#fff;
       background:linear-gradient(90deg,var(--ply-primary),var(--ply-secondary));
       border-radius:1rem;
       box-shadow:0 10px 25px -5px rgba(0,0,0,.15),0 10px 10px -5px rgba(0,0,0,.05);
     }
     #player.layout-horizontal{
       display:flex; align-items:center; gap:1rem;
-      max-width:960px;  /* 🔧 스샷 비율 */
-      padding:1rem 1.25rem;
+      max-width:960px; padding:1rem 1.25rem;
     }
     #player.layout-horizontal .album-art{ width:5rem; height:5rem; }
-
     .text-glow{ text-shadow:0 1px 2px rgba(0,0,0,.25); }
     .title-text{ font-size:var(--title-size); line-height:1.2; }
     .meta-text{  font-size:var(--meta-size); }
 
-    /* 설정 패널 애니메이션 */
-    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);transition:opacity .2s,transform .2s;pointer-events:none}
+    /* Settings panel animation */
+    #settingsPanel{opacity:0;transform:scale(.95) translateY(10px);
+      transition:opacity .2s,transform .2s;pointer-events:none}
     #settingsPanel.open{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
 
-    /* 파형 */
+    /* Waveform */
     #waveformCanvas{width:140px;height:44px}
 
-    /* 결과 영역: 빈 상태도 “카드”처럼 보이게 */
+    /* Results */
     #resultsWrap{ min-height:64px; }
     #status{ min-height:1.5rem; }
 
-    /* 스크롤바(결과 리스트가 길어질 때만) */
+    /* Scrollbar when list grows */
     #searchResults::-webkit-scrollbar{width:8px}
     #searchResults::-webkit-scrollbar-track{background:#f1f1f1;border-radius:10px}
     #searchResults::-webkit-scrollbar-thumb{background:#C4B5FD;border-radius:10px}
@@ -63,8 +57,7 @@
 </head>
 
 <body class="min-h-screen">
-  <div class="w-full max-w-3xl mx-auto px-4 pt-10"> <!-- 🔧 가운데 얇게 -->
-    
+  <div class="w-full max-w-3xl mx-auto px-4 pt-10">
     <!-- Player -->
     <div class="mb-6">
       <div id="player" class="layout-horizontal">
@@ -105,12 +98,10 @@
       </div>
     </section>
 
-    <!-- Results (빈 카드도 표시) -->
+    <!-- Results -->
     <div id="resultsWrap" class="card p-4">
       <div id="status" class="text-center text-gray-500 mb-2"></div>
-      <section>
-        <div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
-      </section>
+      <section><div id="searchResults" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div></section>
     </div>
   </div>
 
@@ -121,13 +112,45 @@
     </button>
 
     <div id="settingsPanel" class="card absolute bottom-20 right-0 w-80 bg-white p-6 rounded-2xl shadow-2xl origin-bottom-right space-y-6">
-      <!-- 채널명 -->
+      <!-- 커버 이미지 -->
       <div>
-        <label class="block text-sm font-medium text-gray-700">표시 채널명</label>
-        <div class="mt-1 flex items-center gap-2">
-          <input id="displayNameInput" type="text" placeholder="채널명을 입력하세요"
-                 class="flex-1 min-w-0 h-10 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500">
-          <button id="applyDisplayName" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+        <label class="block text-sm font-medium text-gray-700">커버 이미지 업로드</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <label class="cursor-pointer h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600 inline-flex items-center">
+            <span>이미지 업로드</span>
+            <input id="imageUpload" type="file" class="hidden" accept="image/*">
+          </label>
+          <button id="revertCover" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">원래 썸네일</button>
+        </div>
+      </div>
+
+      <!-- 카드 색상 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 색상</label>
+        <div class="mt-2 flex flex-row flex-wrap items-center gap-2">
+          <input id="primaryColor" type="color" value="#A855F7" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <input id="secondaryColor" type="color" value="#7C3AED" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <button id="applyColors" class="h-10 px-4 text-sm whitespace-nowrap bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetColors" class="h-10 px-4 text-sm whitespace-nowrap bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+        </div>
+      </div>
+
+      <!-- 배경 색상 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">배경 색상</label>
+        <div class="mt-2 flex items-center gap-2">
+          <input id="bgColor" type="color" value="#ffffff" class="w-10 h-10 p-1 border-0 rounded-md cursor-pointer">
+          <button id="applyBg" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">적용</button>
+          <button id="resetBg" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">기본</button>
+        </div>
+      </div>
+
+      <!-- 카드 레이아웃 -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">카드 레이아웃</label>
+        <div class="mt-2 flex flex-row items-center gap-2">
+          <button id="layoutHorizontalBtn" class="h-10 px-4 text-sm bg-purple-500 text-white rounded-md hover:bg-purple-600">가로형</button>
+          <button id="layoutVerticalBtn" class="h-10 px-4 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">세로형</button>
         </div>
       </div>
 
@@ -177,25 +200,75 @@
     const settingsIconBtn = document.getElementById('settingsIconBtn');
     const settingsPanel   = document.getElementById('settingsPanel');
 
+    // --- Settings controls (re-added) ---
+    const imageUpload = document.getElementById('imageUpload');
+    const revertCover = document.getElementById('revertCover');
+    const primaryColor = document.getElementById('primaryColor');
+    const secondaryColor = document.getElementById('secondaryColor');
+    const applyColors = document.getElementById('applyColors');
+    const resetColors = document.getElementById('resetColors');
+    const bgColor = document.getElementById('bgColor');
+    const applyBg = document.getElementById('applyBg');
+    const resetBg = document.getElementById('resetBg');
+    const layoutHorizontalBtn = document.getElementById('layoutHorizontalBtn');
+    const layoutVerticalBtn   = document.getElementById('layoutVerticalBtn');
+
     const speedInput = document.getElementById('speedInput');
     const speedVal   = document.getElementById('speedVal');
-
     const titleSize = document.getElementById('titleSize');
     const metaSize  = document.getElementById('metaSize');
     const titleSizeVal = document.getElementById('titleSizeVal');
     const metaSizeVal  = document.getElementById('metaSizeVal');
     const resetTextSize= document.getElementById('resetTextSize');
 
+    /* ------- State ------- */
     const PLACEHOLDER = albumArtImg.src;
     let originalAlbumArtUrl = PLACEHOLDER;
+    let userCoverUrl = null;
+    let useUserCover = false;
 
     /* ------- Helpers ------- */
     const setCssVar = (n,v)=>document.documentElement.style.setProperty(n,v);
+    const updatePlayerGradient = ()=>{ setCssVar('--ply-primary', primaryColor.value); setCssVar('--ply-secondary', secondaryColor.value); };
     const applyTitleSize = v => { setCssVar('--title-size', v+'px'); titleSizeVal.textContent=v+'px'; };
     const applyMetaSize  = v => { setCssVar('--meta-size',  v+'px'); metaSizeVal.textContent=v+'px'; };
+    const applyBgColor   = v => setCssVar('--bg-color', v);
 
-    /* ------- Settings ------- */
+    function setLayout(mode){
+      if(mode==='vertical'){
+        playerDiv.classList.remove('layout-horizontal'); playerDiv.classList.add('layout-vertical');
+      }else{
+        playerDiv.classList.remove('layout-vertical'); playerDiv.classList.add('layout-horizontal');
+      }
+      // 버튼 토글 색상
+      const on = (btn)=>{ btn.classList.remove('bg-gray-200','text-gray-700'); btn.classList.add('bg-purple-500','text-white'); };
+      const off= (btn)=>{ btn.classList.remove('bg-purple-500','text-white'); btn.classList.add('bg-gray-200','text-gray-700'); };
+      if(mode==='vertical'){ on(layoutVerticalBtn); off(layoutHorizontalBtn); }
+      else{ on(layoutHorizontalBtn); off(layoutVerticalBtn); }
+      updatePlayerGradient();
+    }
+
+    /* ------- Settings interactions ------- */
     settingsIconBtn.addEventListener('click', ()=> settingsPanel.classList.toggle('open'));
+
+    // 커버 업로드/복원
+    imageUpload?.addEventListener('change', e=>{
+      const f=e.target.files?.[0]; if(!f) return;
+      const r=new FileReader();
+      r.onload=ev=>{ userCoverUrl=ev.target.result; useUserCover=true; albumArtImg.src=userCoverUrl; };
+      r.readAsDataURL(f);
+    });
+    revertCover?.addEventListener('click', ()=>{ useUserCover=false; userCoverUrl=null; albumArtImg.src = originalAlbumArtUrl || PLACEHOLDER; });
+
+    // 색상/배경
+    applyColors?.addEventListener('click', updatePlayerGradient);
+    resetColors?.addEventListener('click', ()=>{ primaryColor.value='#A855F7'; secondaryColor.value='#7C3AED'; updatePlayerGradient(); });
+    applyBg?.addEventListener('click', ()=> applyBgColor(bgColor.value || '#ffffff'));
+    resetBg?.addEventListener('click', ()=>{ bgColor.value='#ffffff'; applyBgColor('#ffffff'); });
+
+    // 레이아웃
+    layoutHorizontalBtn?.addEventListener('click', ()=> setLayout('horizontal'));
+    layoutVerticalBtn?.addEventListener('click', ()=> setLayout('vertical'));
 
     /* ------- Waveform ------- */
     function initWaveform(canvas){
@@ -204,14 +277,17 @@
       let t0=null, prev=new Array(18).fill(0), speed=1;
       const ease=t=>0.5*(1-Math.cos(Math.PI*2*t));
       const dpr=Math.max(1, window.devicePixelRatio||1);
-
       function resize(){
         const W = canvas.clientWidth||140, H = canvas.clientHeight||44;
         canvas.width = Math.floor(W*dpr); canvas.height=Math.floor(H*dpr);
         ctx.setTransform(dpr,0,0,dpr,0,0);
       }
       window.addEventListener('resize', resize); resize();
-
+      function rr(ctx,x,y,w,h,r){const a=Math.min(r,w*.5,h*.5);ctx.beginPath();
+        ctx.moveTo(x+a,y);ctx.lineTo(x+w-a,y);ctx.quadraticCurveTo(x+w,y,x+w,y+a);
+        ctx.lineTo(x+w,y+h-a);ctx.quadraticCurveTo(x+w,y+h,x+w-a,y+h);
+        ctx.lineTo(x+a,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-a);
+        ctx.lineTo(x,y+a);ctx.quadraticCurveTo(x,y,x+a,y);ctx.closePath();}
       function frame(ts){
         if(!t0) t0=ts; const t=(ts-t0)/1000;
         const W=canvas.clientWidth||140, H=canvas.clientHeight||44;
@@ -226,16 +302,9 @@
           const target=H*ratio;
           const h=prev[i]+(target-prev[i])*0.08; prev[i]=h;
           const x=i*(w+gap), y=H-h, r=Math.min(3,w*0.35);
-          ctx.beginPath();
-          const rr=Math.min(r,w*.5,h*.5);
-          ctx.moveTo(x+rr,y);ctx.lineTo(x+w-rr,y);ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
-          ctx.lineTo(x+w,y+h-rr);ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
-          ctx.lineTo(x+rr,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
-          ctx.lineTo(x,y+rr);ctx.quadraticCurveTo(x,y,x+rr,y);ctx.closePath();
-          ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fill();
+          rr(ctx,x,y,w,h,r); ctx.fillStyle='rgba(255,255,255,0.88)'; ctx.fill();
         }
-        ctx.shadowBlur=0;
-        requestAnimationFrame(frame);
+        ctx.shadowBlur=0; requestAnimationFrame(frame);
       }
       requestAnimationFrame(frame);
       return { setSpeed:(m)=>{ speed=Math.max(0.1,Math.min(5,m||1)); } };
@@ -244,7 +313,7 @@
     function applySpeedUI(){ const v=parseFloat(speedInput.value||"1"); speedVal.textContent=v.toFixed(2)+"x"; waveform?.setSpeed(v); }
     speedInput.addEventListener('input', applySpeedUI);
 
-    /* ------- Search (Spotify → 실패 시 iTunes) ------- */
+    /* ------- Search (Spotify → iTunes fallback) ------- */
     const CLIENT_ID = "13ada5c13a834887b16d181b5730a8b3";
     const CLIENT_SECRET = "e29f437d6c3d46509926b78b0fd885fb";
     let spotifyToken=null;
@@ -264,7 +333,6 @@
         return data.access_token || null;
       }catch(e){ console.warn('Spotify 토큰 실패:', e); return null; }
     }
-
     async function searchSpotify(q){
       if(!spotifyToken) spotifyToken = await getSpotifyToken();
       if(!spotifyToken) return null;
@@ -280,7 +348,6 @@
         albumImage:(t.album?.images?.[1]?.url)||(t.album?.images?.[0]?.url)||null
       }));
     }
-
     async function searchItunes(q){
       const res=await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=24`);
       const data=await res.json();
@@ -290,7 +357,6 @@
         albumImage:it.artworkUrl100||it.artworkUrl60||null
       }));
     }
-
     function clearResults(){ searchResultsContainer.innerHTML=''; }
     function displayResults(tracks){
       clearResults();
@@ -311,25 +377,22 @@
           </div>`;
         card.addEventListener('click', ()=>{
           originalAlbumArtUrl = img;
-          albumArtImg.src = img;
+          if(!useUserCover) albumArtImg.src = img;
           trackTitleSpan.textContent = track.name || '노래 제목';
           trackArtistSpan.textContent = names ? `- ${names}` : '';
         });
         searchResultsContainer.appendChild(card);
       });
     }
-
     async function searchTracks(q){
       statusDiv.textContent='검색 중...'; clearResults();
       let list = await searchSpotify(q);
       if(!list || list.length===0){
         list = await searchItunes(q);
-        if(!list || list.length===0) statusDiv.textContent='검색 결과가 없습니다.';
-        else statusDiv.textContent='';
+        statusDiv.textContent = (!list || list.length===0) ? '검색 결과가 없습니다.' : '';
       }
       displayResults(list);
     }
-
     function performSearch(){
       const q = searchInput.value.trim();
       if(!q){ statusDiv.textContent=''; clearResults(); return; }
@@ -340,9 +403,12 @@
     searchInput.addEventListener('input', e=>{ if(!e.target.value.trim()){ statusDiv.textContent=''; clearResults(); } });
 
     /* ------- Init ------- */
+    updatePlayerGradient();
     applySpeedUI();
     applyTitleSize(titleSize.value);
     applyMetaSize(metaSize.value);
+    applyBgColor(bgColor.value);
+    setLayout('horizontal'); // 기본 가로형
   </script>
 </body>
 </html>
